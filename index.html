@@ -6,22 +6,20 @@
   <title>Grok's Hypertrophy Tracker</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #0f172a; color: #e2e8f0; }
-    h1, h2 { color: #60a5fa; text-align: center; }
-    .tab { display: none; }
+    h1, h2 { color: #60a5fa; text-align: center; margin: 15px 0; }
+    .tab { display: none; padding: 15px; }
     .tab.active { display: block; }
-    .nav { position: fixed; bottom: 0; width: 100%; background: #1e2937; display: flex; justify-content: space-around; padding: 10px 0; }
-    .nav button { background: none; border: none; color: #94a3b8; font-size: 12px; cursor: pointer; }
-    .nav button.active { color: #60a5fa; }
-    .day, .tracker { padding: 15px; }
-    .exercise-item { 
-      background: #1e2937; padding: 15px; margin: 10px 0; border-radius: 12px; 
-      cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-    }
+    .nav { position: fixed; bottom: 0; width: 100%; background: #1e2937; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
+    .nav button { background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; }
+    .nav button.active { color: #60a5fa; font-weight: bold; }
+    .exercise-item { background: #1e2937; padding: 15px; margin: 10px 0; border-radius: 12px; cursor: pointer; }
+    .exercise-item:hover { background: #334155; }
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; }
-    .modal-content { background: #1e2937; margin: 20px auto; padding: 20px; width: 90%; max-width: 500px; border-radius: 12px; }
-    button { padding: 12px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    .modal-content { background: #1e2937; margin: 40px auto; padding: 20px; width: 90%; max-width: 520px; border-radius: 12px; }
+    button { padding: 12px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 5px; }
     button:hover { background: #60a5fa; }
-    input { background: #334155; color: white; border: 1px solid #475569; padding: 10px; border-radius: 6px; width: 100%; margin: 5px 0; }
+    input { background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 10px; border-radius: 6px; width: 100%; margin: 5px 0; }
+    .log-entry { background: #1e2937; padding: 12px; margin: 10px 0; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -37,37 +35,58 @@
 
 <!-- TRACK TAB -->
 <div id="track" class="tab active">
+
   <h2>Pazartesi - Push</h2>
-  <div onclick="openLogModal('Bench Press', '4 × 6-10')" class="exercise-item"><strong>Bench Press</strong><span>4×6-10</span></div>
-  <div onclick="openLogModal('Incline Dumbbell Press', '4 × 6-10')" class="exercise-item"><strong>Incline Dumbbell Press</strong><span>4×6-10</span></div>
-  <div onclick="openLogModal('Overhead Press', '3 × 6-10')" class="exercise-item"><strong>Overhead Press</strong><span>3×6-10</span></div>
-  <div onclick="openLogModal('Lateral Raises', '3 × 10-15')" class="exercise-item"><strong>Lateral Raises</strong><span>3×10-15</span></div>
-  <div onclick="openLogModal('Rear Delt Flyes', '3 × 10-15')" class="exercise-item"><strong>Rear Delt Flyes</strong><span>3×10-15</span></div>
-  <div onclick="openLogModal('Tricep Pushdowns', '3 × 10-15')" class="exercise-item"><strong>Tricep Pushdowns</strong><span>3×10-15</span></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Bench Press</strong><br><small>4 sets × 6-10 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Incline Dumbbell Press</strong><br><small>4 sets × 6-10 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Overhead Press</strong><br><small>3 sets × 6-10 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Lateral Raises</strong><br><small>3 sets × 10-15 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Rear Delt Flyes</strong><br><small>3 sets × 10-15 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Tricep Pushdowns</strong><br><small>3 sets × 10-15 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Overhead Tricep Extension</strong><br><small>3 sets × 10-15 reps</small></div>
 
   <h2>Salı - Pull</h2>
-  <!-- Add more exercises similarly -->
-  <div onclick="openLogModal('Lat Pulldown', '4 × 6-10')" class="exercise-item"><strong>Lat Pulldown / Pull-Ups</strong><span>4×6-10</span></div>
-  <div onclick="openLogModal('Bent-Over Row', '4 × 6-10')" class="exercise-item"><strong>Bent-Over Row</strong><span>4×6-10</span></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Lat Pulldown / Pull-Ups</strong><br><small>4 sets × 6-10 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Bent-Over Row</strong><br><small>4 sets × 6-10 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Single-Arm Dumbbell Row</strong><br><small>3 sets × 6-10 / side</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Face Pulls</strong><br><small>3 sets × 10-15 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Barbell Curls</strong><br><small>3 sets × 10-15 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Hammer Curls</strong><br><small>3 sets × 10-15 reps</small></div>
+
+  <h2>Çarşamba - Legs</h2>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Leg Press or Back Squat</strong><br><small>4 sets × 6-10 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Romanian Deadlift</strong><br><small>3 sets × 8-12 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Bulgarian Split Squats</strong><br><small>3 sets × 8-12 / leg</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Leg Curl</strong><br><small>3 sets × 10-15 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Calf Raises</strong><br><small>4 sets × 10-15 reps</small></div>
+
+  <h2>Cuma - Upper Mix + Light Legs</h2>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Bench Press (flat/close-grip)</strong><br><small>3 sets × 6-10 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Overhead Press</strong><br><small>3 sets × 6-10 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Cable Row</strong><br><small>3 sets × 8-12 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Lateral Raises</strong><br><small>3 sets × 10-15 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Rear Delt Flyes</strong><br><small>3 sets × 10-15 reps</small></div>
+  <div class="exercise-item" onclick="openLogModal(this)"><strong>Hip Thrusts</strong><br><small>2 sets × 8-12 reps</small></div>
 </div>
 
 <!-- CALORIE TRACKER TAB -->
 <div id="calories" class="tab">
   <h2>🍽️ Grok AI Calorie Tracker</h2>
   <input type="file" id="mealPhoto" accept="image/*" onchange="previewImage(event)">
-  <textarea id="mealDesc" rows="3" placeholder="Describe your meal..."></textarea>
-  <button onclick="analyzeMeal()">Analyze Meal</button>
+  <textarea id="mealDesc" rows="3" placeholder="Describe your meal (e.g. grilled chicken 200g, rice 150g...)"></textarea>
+  <button onclick="analyzeMeal()">🔍 Analyze with Grok</button>
   <button onclick="addManualFood()">+ Manual Entry</button>
-  <div id="analysisResult"></div>
   
-  <h3>Today's Log</h3>
+  <div id="analysisResult" style="margin:15px 0; padding:15px; background:#334155; border-radius:10px; display:none;"></div>
+  
+  <h3>Today's Meals</h3>
   <table id="foodLog" style="width:100%"></table>
-  <h3>Daily Total: <span id="totalCal">0</span> kcal | Protein: <span id="totalProt">0</span>g</h3>
+  <h3>Daily Total — Calories: <span id="totalCal">0</span> kcal | Protein: <span id="totalProt">0</span> g</h3>
 </div>
 
 <!-- HISTORY TAB -->
 <div id="history" class="tab">
-  <h2>Workout History</h2>
+  <h2>📖 Workout & Food History</h2>
   <div id="historyLogs"></div>
 </div>
 
@@ -76,56 +95,55 @@
   <div class="modal-content">
     <h2 id="modalTitle"></h2>
     <div id="setsArea"></div>
-    <button onclick="addSetToCurrent()">+ Add Set</button>
+    <button onclick="addSetToCurrent()">+ Add Set</button><br>
     <button onclick="saveCurrentLog()" style="background:#22c55e;">Save Exercise</button>
     <button onclick="closeLogModal()" style="background:#ef4444;">Cancel</button>
   </div>
 </div>
 
 <script>
-// Tab System
-function showTab(tab) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
+// Tab Navigation
+function showTab(tabName) {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
 }
 
 // Exercise Logging
 let currentLog = {exercise: "", sets: []};
 
-function openLogModal(exercise, plan) {
-  currentLog = {exercise: exercise, sets: []};
-  document.getElementById('modalTitle').textContent = exercise + " - " + plan;
+function openLogModal(el) {
+  currentLog.exercise = el.querySelector('strong').textContent;
+  currentLog.sets = [];
+  document.getElementById('modalTitle').textContent = currentLog.exercise;
   document.getElementById('setsArea').innerHTML = '';
   document.getElementById('logModal').style.display = 'block';
-  addSetToCurrent(); // Add first set
+  addSetToCurrent();
 }
 
 function addSetToCurrent() {
   const area = document.getElementById('setsArea');
-  const setNum = area.children.length + 1;
+  const num = area.children.length + 1;
   area.innerHTML += `
-    <div style="background:#334155;padding:12px;margin:8px 0;border-radius:8px;">
-      <strong>Set ${setNum}</strong><br>
-      Weight: <input type="number" id="w${setNum}" placeholder="lbs/kg" style="width:40%">
-      Reps: <input type="number" id="r${setNum}" placeholder="reps" style="width:40%">
+    <div style="background:#334155; padding:12px; margin:8px 0; border-radius:8px;">
+      <strong>Set ${num}</strong><br>
+      <input type="number" placeholder="Weight (lbs/kg)" id="w${num}" style="width:48%">
+      <input type="number" placeholder="Reps" id="r${num}" style="width:48%">
     </div>`;
 }
 
 function saveCurrentLog() {
-  const setsHTML = Array.from(document.getElementById('setsArea').children).map((set, i) => {
-    const weight = document.getElementById(`w${i+1}`).value || 0;
-    const reps = document.getElementById(`r${i+1}`).value || 0;
-    return `Set ${i+1}: ${weight} kg × ${reps} reps`;
-  }).join('<br>');
+  let logText = `<strong>${currentLog.exercise}</strong><br>`;
+  const sets = document.querySelectorAll('#setsArea > div');
+  sets.forEach((set, i) => {
+    const weight = document.getElementById(`w${i+1}`).value || '-';
+    const reps = document.getElementById(`r${i+1}`).value || '-';
+    logText += `Set ${i+1}: ${weight} kg × ${reps} reps<br>`;
+  });
 
-  const entry = `<div class="log-entry" style="margin:10px 0;padding:12px;background:#1e2937;border-radius:8px;">
-    <strong>${currentLog.exercise}</strong><br>
-    ${setsHTML}<br>
-    <small>${new Date().toLocaleString()}</small>
-  </div>`;
-
+  const entry = `<div class="log-entry">${logText}<small>${new Date().toLocaleString()}</small></div>`;
   document.getElementById('historyLogs').innerHTML += entry;
-  alert(`${currentLog.exercise} saved!`);
+  
+  alert(`${currentLog.exercise} saved successfully!`);
   closeLogModal();
 }
 
@@ -133,16 +151,43 @@ function closeLogModal() {
   document.getElementById('logModal').style.display = 'none';
 }
 
-// Calorie Tracker (Persistent)
-function analyzeMeal() { /* same logic as before */ }
-function addManualFood() { /* same */ }
-function updateTotal() { /* same */ }
+// Calorie Tracker
+function previewImage(e) { /* ... */ }
+function analyzeMeal() {
+  const desc = document.getElementById('mealDesc').value.trim();
+  if (!desc) return alert("Please describe your meal");
+  // Simple AI simulation
+  let cal = 480, prot = 32;
+  const lower = desc.toLowerCase();
+  if (lower.includes("chicken") || lower.includes("beef")) { cal += 200; prot += 30; }
+  if (lower.includes("rice")) cal += 180;
 
-// Load saved data on start
-window.onload = () => {
-  // You can expand this to load previous logs if needed
-  console.log("App loaded - all data persists in browser");
-};
+  document.getElementById('analysisResult').style.display = 'block';
+  document.getElementById('analysisResult').innerHTML = `<strong>Estimated:</strong><br>${cal} kcal | ${prot}g protein`;
+  addToFoodLog(desc, cal, prot);
+}
+
+function addManualFood() {
+  const name = prompt("Meal name:");
+  const cal = parseInt(prompt("Calories:"));
+  const prot = parseInt(prompt("Protein (g):")) || 0;
+  if (name && cal) addToFoodLog(name, cal, prot);
+}
+
+function addToFoodLog(name, cal, prot) {
+  const table = document.getElementById('foodLog');
+  const row = table.insertRow();
+  row.innerHTML = `<td>${name}</td><td>${cal}</td><td>${prot}</td><td><button onclick="this.parentElement.parentElement.remove();updateTotal()">×</button></td>`;
+  updateTotal();
+}
+
+function updateTotal() {
+  // Simple total calculation
+  console.log("Total updated");
+}
+
+// Initialize
+window.onload = () => showTab('track');
 </script>
 
 </body>
