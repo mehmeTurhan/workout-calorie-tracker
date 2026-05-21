@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hypertrophy Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -17,8 +18,12 @@
       text-align: center; 
       margin: 15px 0; 
     }
-    .tab { display: none; padding: 15px; }
+    .tab { 
+      display: none; 
+      padding: 15px 15px 100px; 
+    }
     .tab.active { display: block; }
+    
     .nav { 
       position: fixed; 
       bottom: 0; 
@@ -28,6 +33,7 @@
       justify-content: space-around; 
       padding: 12px 0; 
       border-top: 1px solid #334155; 
+      z-index: 100;
     }
     .nav button { 
       background: none; 
@@ -55,20 +61,20 @@
     .exercise-item:hover { background: #334155; }
     .exercise-item .drag-handle {
       position: absolute;
-      left: 10px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
       cursor: grab;
       color: #64748b;
-      font-size: 20px;
+      font-size: 22px;
     }
     .exercise-item .controls {
       position: absolute;
-      right: 10px;
-      top: 10px;
+      right: 12px;
+      top: 12px;
       display: flex;
-      gap: 5px;
-      opacity: 0.7;
+      gap: 6px;
+      opacity: 0.8;
     }
     .exercise-item:hover .controls { opacity: 1; }
 
@@ -103,7 +109,8 @@
     button:hover { background: #60a5fa; }
     button.danger { background: #ef4444; }
     button.success { background: #22c55e; }
-    input, select, textarea { 
+
+    input, textarea { 
       background: #334155; 
       color: #e2e8f0; 
       border: 1px solid #475569; 
@@ -111,6 +118,7 @@
       border-radius: 6px; 
       width: 100%; 
       margin: 5px 0; 
+      box-sizing: border-box;
     }
     .log-entry { 
       background: #1e2937; 
@@ -118,16 +126,32 @@
       margin: 10px 0; 
       border-radius: 10px; 
     }
-    .edit-program-btn {
-      background: #64748b;
-      font-size: 0.9em;
-      padding: 6px 12px;
+
+    canvas {
+      margin: 15px 0;
+      background: #1e2937;
+      border-radius: 12px;
+      padding: 10px;
     }
+
+    #calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+      font-size: 0.85em;
+    }
+    .calendar-day {
+      padding: 8px 4px;
+      border-radius: 6px;
+      background: #1e2937;
+    }
+    .workout-day { background: #22c55e; color: black; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<h1>Grok's Hypertrophy Tracker</h1>
+<h1>Hypertrophy Tracker</h1>
 
 <!-- Navigation -->
 <div class="nav">
@@ -138,35 +162,56 @@
 
 <!-- TRACK TAB -->
 <div id="track" class="tab active">
-  <div style="text-align:center; margin-bottom:15px;">
-    <button onclick="toggleProgramEdit()" class="edit-program-btn">✏️ Edit Program</button>
+  <div style="text-align:center; margin:15px 0;">
+    <button onclick="toggleProgramEdit()">✏️ Edit Program</button>
   </div>
-
   <div id="workoutProgram"></div>
 </div>
 
 <!-- CALORIE TRACKER TAB -->
 <div id="calories" class="tab">
-  <h2>🍽️ Grok AI Calorie Tracker</h2>
-  <input type="file" id="mealPhoto" accept="image/*" onchange="previewImage(event)">
-  <textarea id="mealDesc" rows="3" placeholder="Describe your meal (e.g. grilled chicken 200g, rice 150g...)"></textarea>
-  <button onclick="analyzeMeal()">🔍 Analyze with Grok</button>
-  <button onclick="addManualFood()">+ Manual Entry</button>
+  <h2>Calorie Tracker</h2>
   
+  <input type="file" id="mealPhoto" accept="image/*" onchange="previewImage(event)" style="margin-bottom:10px;">
+  <textarea id="mealDesc" rows="3" placeholder="Describe your meal for AI analysis..."></textarea>
+  <button onclick="analyzeMeal()">🔍 Analyze with AI</button>
+
+  <div style="background:#1e2937; padding:15px; border-radius:12px; margin:15px 0;">
+    <h3>+ Manual Meal Entry</h3>
+    <input type="text" id="manualName" placeholder="Meal name">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <input type="number" id="manualCal" placeholder="Calories">
+      <input type="number" id="manualProt" placeholder="Protein (g)">
+      <input type="number" id="manualCarbs" placeholder="Carbs (g)">
+      <input type="number" id="manualFat" placeholder="Fat (g)">
+    </div>
+    <button onclick="addManualMeal()" style="width:100%; margin-top:10px;">Add Meal</button>
+  </div>
+
   <div id="analysisResult" style="margin:15px 0; padding:15px; background:#334155; border-radius:10px; display:none;"></div>
   
   <h3>Today's Meals</h3>
-  <table id="foodLog" style="width:100%"></table>
+  <table id="foodLog" style="width:100%; border-collapse:collapse;"></table>
   <h3>Daily Total — Calories: <span id="totalCal">0</span> kcal | Protein: <span id="totalProt">0</span> g</h3>
 </div>
 
 <!-- HISTORY TAB -->
 <div id="history" class="tab">
-  <h2>📖 Workout & Food History</h2>
-  <div id="historyLogs"></div>
+  <h2>History & Progress</h2>
+  
+  <h3>Weight Tracking</h3>
+  <input type="number" id="weightInput" placeholder="Body weight (kg)" style="width:65%; display:inline-block;">
+  <button onclick="logWeight()">Log Weight</button>
+  <canvas id="weightChart" height="160"></canvas>
+
+  <h3>Calorie Trend (Last 7 Days)</h3>
+  <canvas id="calorieChart" height="160"></canvas>
+
+  <h3>Workout Calendar</h3>
+  <div id="calendar"></div>
 </div>
 
-<!-- Logging Modal -->
+<!-- Workout Logging Modal -->
 <div id="logModal" class="modal">
   <div class="modal-content">
     <h2 id="modalTitle"></h2>
@@ -206,151 +251,126 @@
 </div>
 
 <script>
-// ====================== DATA MODEL ======================
+// ====================== DATA ======================
 let workoutProgram = [
-  {
-    id: "push",
-    day: "Monday - Push",
-    exercises: [
-      { id: "bp1", name: "Bench Press", sets: 4, reps: "6-10" },
-      { id: "idp1", name: "Incline Dumbbell Press", sets: 4, reps: "6-10" },
-      { id: "ohp1", name: "Overhead Press", sets: 3, reps: "6-10" },
-      { id: "lr1", name: "Lateral Raises", sets: 3, reps: "10-15" },
-      { id: "rdf1", name: "Rear Delt Flyes", sets: 3, reps: "10-15" },
-      { id: "tp1", name: "Tricep Pushdowns", sets: 3, reps: "10-15" },
-      { id: "ote1", name: "Overhead Tricep Extension", sets: 3, reps: "10-15" }
-    ]
-  },
-  {
-    id: "pull",
-    day: "Tuesday - Pull",
-    exercises: [
-      { id: "lp1", name: "Lat Pulldown / Pull-Ups", sets: 4, reps: "6-10" },
-      { id: "bor1", name: "Bent-Over Row", sets: 4, reps: "6-10" },
-      { id: "sadr1", name: "Single-Arm Dumbbell Row", sets: 3, reps: "6-10 / side" },
-      { id: "fp1", name: "Face Pulls", sets: 3, reps: "10-15" },
-      { id: "bc1", name: "Barbell Curls", sets: 3, reps: "10-15" },
-      { id: "hc1", name: "Hammer Curls", sets: 3, reps: "10-15" }
-    ]
-  },
-  {
-    id: "legs",
-    day: "Wednesday - Legs",
-    exercises: [
-      { id: "lp2", name: "Leg Press or Back Squat", sets: 4, reps: "6-10" },
-      { id: "rdl1", name: "Romanian Deadlift", sets: 3, reps: "8-12" },
-      { id: "bss1", name: "Bulgarian Split Squats", sets: 3, reps: "8-12 / leg" },
-      { id: "lc1", name: "Leg Curl", sets: 3, reps: "10-15" },
-      { id: "cr1", name: "Calf Raises", sets: 4, reps: "10-15" }
-    ]
-  },
-  {
-    id: "upper",
-    day: "Friday - Upper Mix + Light Legs",
-    exercises: [
-      { id: "bp2", name: "Bench Press (flat/close-grip)", sets: 3, reps: "6-10" },
-      { id: "ohp2", name: "Overhead Press", sets: 3, reps: "6-10" },
-      { id: "cr2", name: "Cable Row", sets: 3, reps: "8-12" },
-      { id: "lr2", name: "Lateral Raises", sets: 3, reps: "10-15" },
-      { id: "rdf2", name: "Rear Delt Flyes", sets: 3, reps: "10-15" },
-      { id: "ht1", name: "Hip Thrusts", sets: 2, reps: "8-12" }
-    ]
-  }
+  { id: "push", day: "Monday - Push", exercises: [
+    { id: "bp1", name: "Bench Press", sets: 4, reps: "6-10" },
+    { id: "idp1", name: "Incline Dumbbell Press", sets: 4, reps: "6-10" },
+    { id: "ohp1", name: "Overhead Press", sets: 3, reps: "6-10" },
+    { id: "lr1", name: "Lateral Raises", sets: 3, reps: "10-15" },
+    { id: "rdf1", name: "Rear Delt Flyes", sets: 3, reps: "10-15" },
+    { id: "tp1", name: "Tricep Pushdowns", sets: 3, reps: "10-15" },
+    { id: "ote1", name: "Overhead Tricep Extension", sets: 3, reps: "10-15" }
+  ]},
+  { id: "pull", day: "Tuesday - Pull", exercises: [
+    { id: "lp1", name: "Lat Pulldown / Pull-Ups", sets: 4, reps: "6-10" },
+    { id: "bor1", name: "Bent-Over Row", sets: 4, reps: "6-10" },
+    { id: "sadr1", name: "Single-Arm Dumbbell Row", sets: 3, reps: "6-10 / side" },
+    { id: "fp1", name: "Face Pulls", sets: 3, reps: "10-15" },
+    { id: "bc1", name: "Barbell Curls", sets: 3, reps: "10-15" },
+    { id: "hc1", name: "Hammer Curls", sets: 3, reps: "10-15" }
+  ]},
+  { id: "legs", day: "Wednesday - Legs", exercises: [
+    { id: "lp2", name: "Leg Press or Back Squat", sets: 4, reps: "6-10" },
+    { id: "rdl1", name: "Romanian Deadlift", sets: 3, reps: "8-12" },
+    { id: "bss1", name: "Bulgarian Split Squats", sets: 3, reps: "8-12 / leg" },
+    { id: "lc1", name: "Leg Curl", sets: 3, reps: "10-15" },
+    { id: "cr1", name: "Calf Raises", sets: 4, reps: "10-15" }
+  ]},
+  { id: "upper", day: "Friday - Upper + Legs", exercises: [
+    { id: "bp2", name: "Bench Press (flat/close-grip)", sets: 3, reps: "6-10" },
+    { id: "ohp2", name: "Overhead Press", sets: 3, reps: "6-10" },
+    { id: "cr2", name: "Cable Row", sets: 3, reps: "8-12" },
+    { id: "lr2", name: "Lateral Raises", sets: 3, reps: "10-15" },
+    { id: "rdf2", name: "Rear Delt Flyes", sets: 3, reps: "10-15" },
+    { id: "ht1", name: "Hip Thrusts", sets: 2, reps: "8-12" }
+  ]}
 ];
+
+let foodHistory = [];
+let weightHistory = [];
+let workoutHistory = []; // {date: "2025-05-20", dayType: "Monday - Push"}
 
 let isEditingProgram = false;
 let currentDayIndex = null;
 let currentExerciseIndex = null;
-let currentLog = { exercise: "", dayId: "", exerciseId: "", sets: [] };
+let currentLog = { exercise: "", sets: [] };
 
-// Load from localStorage
-function loadProgram() {
-  const saved = localStorage.getItem('hypertrophyProgram');
-  if (saved) workoutProgram = JSON.parse(saved);
+// Load data
+function loadData() {
+  const savedProgram = localStorage.getItem('hypertrophyProgram');
+  if (savedProgram) workoutProgram = JSON.parse(savedProgram);
+
+  const savedFood = localStorage.getItem('foodHistory');
+  if (savedFood) foodHistory = JSON.parse(savedFood);
+
+  const savedWeight = localStorage.getItem('weightHistory');
+  if (savedWeight) weightHistory = JSON.parse(savedWeight);
+
+  const savedWorkouts = localStorage.getItem('workoutHistory');
+  if (savedWorkouts) workoutHistory = JSON.parse(savedWorkouts);
 }
 
-// Save to localStorage
-function saveProgram() {
+function saveAll() {
   localStorage.setItem('hypertrophyProgram', JSON.stringify(workoutProgram));
+  localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
+  localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
+  localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
 }
 
-// Render the entire program
+// Render Workout Program
 function renderWorkoutProgram() {
   const container = document.getElementById('workoutProgram');
   container.innerHTML = '';
 
   workoutProgram.forEach((day, dayIndex) => {
-    const dayHTML = `
+    let html = `
       <div class="day-header">
         <h2>${day.day}</h2>
-        ${isEditingProgram ? `
-          <div>
-            <button onclick="addExerciseToDay(${dayIndex})" style="font-size:0.9em;">+ Add</button>
-          </div>
-        ` : ''}
-      </div>
-    `;
-    container.innerHTML += dayHTML;
-
-    const dayContainer = document.createElement('div');
-    dayContainer.id = `day-${day.id}`;
+        ${isEditingProgram ? `<button onclick="addExerciseToDay(${dayIndex})">+ Add Exercise</button>` : ''}
+      </div>`;
 
     day.exercises.forEach((ex, exIndex) => {
-      const exHTML = `
+      html += `
         <div class="exercise-item" draggable="${isEditingProgram}" 
              ondragstart="dragStart(event, ${dayIndex}, ${exIndex})"
              ondragover="dragOver(event)"
              ondrop="drop(event, ${dayIndex}, ${exIndex})"
              onclick="${isEditingProgram ? '' : `openLogModal(${dayIndex}, ${exIndex})`}">
-          
           ${isEditingProgram ? `<span class="drag-handle">☰</span>` : ''}
-          
           <strong>${ex.name}</strong><br>
           <small>${ex.sets} sets × ${ex.reps} reps</small>
-          
           ${isEditingProgram ? `
             <div class="controls">
-              <button onclick="editExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();" style="padding:4px 8px; font-size:0.8em;">✏️</button>
-              <button onclick="deleteExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();" class="danger" style="padding:4px 8px; font-size:0.8em;">🗑</button>
-            </div>
-          ` : ''}
-        </div>
-      `;
-      dayContainer.innerHTML += exHTML;
+              <button onclick="editExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();">✏️</button>
+              <button onclick="deleteExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();" class="danger">🗑</button>
+            </div>` : ''}
+        </div>`;
     });
-
-    container.appendChild(dayContainer);
+    container.innerHTML += html;
   });
 }
 
-// Drag and Drop
-let draggedDayIndex = null;
-let draggedExIndex = null;
-
+// Drag & Drop
 function dragStart(e, dayIndex, exIndex) {
-  draggedDayIndex = dayIndex;
-  draggedExIndex = exIndex;
-  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", JSON.stringify({dayIndex, exIndex}));
 }
-
-function dragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = "move";
-}
-
+function dragOver(e) { e.preventDefault(); }
 function drop(e, targetDayIndex, targetExIndex) {
   e.preventDefault();
-  if (draggedDayIndex === null || draggedExIndex === null) return;
-  
-  const day = workoutProgram[targetDayIndex];
-  const [movedExercise] = day.exercises.splice(draggedExIndex, 1);
-  day.exercises.splice(targetExIndex, 0, movedExercise);
-  
-  saveProgram();
-  renderWorkoutProgram();
+  const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+  const {dayIndex: sourceDay, exIndex: sourceEx} = data;
+
+  if (sourceDay === targetDayIndex) {
+    const day = workoutProgram[targetDayIndex];
+    const [moved] = day.exercises.splice(sourceEx, 1);
+    day.exercises.splice(targetExIndex, 0, moved);
+    saveAll();
+    renderWorkoutProgram();
+  }
 }
 
-// ====================== PROGRAM EDITING ======================
+// Program Editing
 function toggleProgramEdit() {
   isEditingProgram = !isEditingProgram;
   renderWorkoutProgram();
@@ -360,23 +380,18 @@ function editExercise(dayIndex, exIndex) {
   currentDayIndex = dayIndex;
   currentExerciseIndex = exIndex;
   const ex = workoutProgram[dayIndex].exercises[exIndex];
-  
   document.getElementById('editName').value = ex.name;
   document.getElementById('editSets').value = ex.sets;
   document.getElementById('editReps').value = ex.reps;
-  
   document.getElementById('editExerciseModal').style.display = 'block';
 }
 
 function saveEditedExercise() {
-  if (currentDayIndex === null || currentExerciseIndex === null) return;
-  
   const ex = workoutProgram[currentDayIndex].exercises[currentExerciseIndex];
   ex.name = document.getElementById('editName').value.trim() || ex.name;
   ex.sets = parseInt(document.getElementById('editSets').value) || ex.sets;
   ex.reps = document.getElementById('editReps').value.trim() || ex.reps;
-  
-  saveProgram();
+  saveAll();
   closeEditModal();
   renderWorkoutProgram();
 }
@@ -386,10 +401,11 @@ function closeEditModal() {
 }
 
 function deleteExercise(dayIndex, exIndex) {
-  if (!confirm("Delete this exercise?")) return;
-  workoutProgram[dayIndex].exercises.splice(exIndex, 1);
-  saveProgram();
-  renderWorkoutProgram();
+  if (confirm("Delete this exercise?")) {
+    workoutProgram[dayIndex].exercises.splice(exIndex, 1);
+    saveAll();
+    renderWorkoutProgram();
+  }
 }
 
 function addExerciseToDay(dayIndex) {
@@ -401,20 +417,16 @@ function addExerciseToDay(dayIndex) {
 }
 
 function saveNewExercise() {
-  if (currentDayIndex === null) return;
-  
   const name = document.getElementById('newExerciseName').value.trim();
   if (!name) return alert("Exercise name is required");
-  
   const newEx = {
     id: 'ex_' + Date.now(),
     name: name,
     sets: parseInt(document.getElementById('newSets').value) || 3,
     reps: document.getElementById('newReps').value.trim() || '8-12'
   };
-  
   workoutProgram[currentDayIndex].exercises.push(newEx);
-  saveProgram();
+  saveAll();
   closeAddModal();
   renderWorkoutProgram();
 }
@@ -423,18 +435,17 @@ function closeAddModal() {
   document.getElementById('addExerciseModal').style.display = 'none';
 }
 
-// ====================== LOGGING ======================
+// Workout Logging
 function openLogModal(dayIndex, exIndex) {
-  const day = workoutProgram[dayIndex];
-  const ex = day.exercises[exIndex];
+  const ex = workoutProgram[dayIndex].exercises[exIndex];
+  currentLog = { exercise: ex.name, sets: [] };
   
-  currentLog = { 
-    exercise: ex.name, 
-    dayId: day.id, 
-    exerciseId: ex.id, 
-    sets: [] 
-  };
-  
+  // Record workout day
+  const today = new Date().toISOString().split('T')[0];
+  if (!workoutHistory.some(w => w.date === today)) {
+    workoutHistory.unshift({ date: today, dayType: workoutProgram[dayIndex].day });
+  }
+
   document.getElementById('modalTitle').textContent = ex.name;
   document.getElementById('setsArea').innerHTML = '';
   document.getElementById('logModal').style.display = 'block';
@@ -454,16 +465,15 @@ function addSetToCurrent() {
 
 function saveCurrentLog() {
   let logText = `<strong>${currentLog.exercise}</strong><br>`;
-  const sets = document.querySelectorAll('#setsArea > div');
-  
-  sets.forEach((set, i) => {
+  const setsDivs = document.querySelectorAll('#setsArea > div');
+  setsDivs.forEach((set, i) => {
     const weight = document.getElementById(`w${i+1}`).value || '-';
     const reps = document.getElementById(`r${i+1}`).value || '-';
     logText += `Set ${i+1}: ${weight} kg × ${reps} reps<br>`;
   });
 
   const entry = `<div class="log-entry">${logText}<small>${new Date().toLocaleString()}</small></div>`;
-  document.getElementById('historyLogs').innerHTML += entry;
+  document.getElementById('historyLogs').innerHTML = entry + document.getElementById('historyLogs').innerHTML;
   
   alert(`${currentLog.exercise} logged successfully!`);
   closeLogModal();
@@ -473,56 +483,162 @@ function closeLogModal() {
   document.getElementById('logModal').style.display = 'none';
 }
 
-// ====================== TAB NAVIGATION ======================
-function showTab(tabName) {
-  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-  document.getElementById(tabName).classList.add('active');
-  
-  // Re-render when switching back to track in case edits happened
-  if (tabName === 'track') renderWorkoutProgram();
-}
+// Calorie Functions
+function previewImage() {}
 
-// ====================== CALORIE TRACKER (unchanged) ======================
-function previewImage(e) { /* placeholder */ }
 function analyzeMeal() {
   const desc = document.getElementById('mealDesc').value.trim();
   if (!desc) return alert("Please describe your meal");
   
-  let cal = 480, prot = 32;
+  let cal = 520, prot = 32, carbs = 48, fat = 16;
   const lower = desc.toLowerCase();
-  if (lower.includes("chicken") || lower.includes("beef")) { cal += 200; prot += 30; }
-  if (lower.includes("rice")) cal += 180;
+  if (lower.includes("chicken") || lower.includes("beef")) { cal += 230; prot += 35; }
+  if (lower.includes("rice")) { cal += 190; carbs += 42; }
 
   document.getElementById('analysisResult').style.display = 'block';
-  document.getElementById('analysisResult').innerHTML = `<strong>Estimated:</strong><br>${cal} kcal | ${prot}g protein`;
-  addToFoodLog(desc, cal, prot);
+  document.getElementById('analysisResult').innerHTML = `<strong>Estimated:</strong><br>${cal} kcal | ${prot}g P | ${carbs}g C | ${fat}g F`;
+  addFoodEntry(desc, cal, prot, carbs, fat);
 }
 
-function addManualFood() {
-  const name = prompt("Meal name:");
-  const cal = parseInt(prompt("Calories:"));
-  const prot = parseInt(prompt("Protein (g):")) || 0;
-  if (name && cal) addToFoodLog(name, cal, prot);
+function addManualMeal() {
+  const name = document.getElementById('manualName').value.trim();
+  const cal = parseInt(document.getElementById('manualCal').value) || 0;
+  const prot = parseInt(document.getElementById('manualProt').value) || 0;
+  const carbs = parseInt(document.getElementById('manualCarbs').value) || 0;
+  const fat = parseInt(document.getElementById('manualFat').value) || 0;
+
+  if (!name || cal <= 0) return alert("Meal name and calories are required");
+  addFoodEntry(name, cal, prot, carbs, fat);
+
+  document.getElementById('manualName').value = '';
+  document.getElementById('manualCal').value = '';
+  document.getElementById('manualProt').value = '';
+  document.getElementById('manualCarbs').value = '';
+  document.getElementById('manualFat').value = '';
 }
 
-function addToFoodLog(name, cal, prot) {
+function addFoodEntry(name, cal, prot, carbs, fat) {
+  foodHistory.unshift({
+    date: new Date().toISOString().split('T')[0],
+    name: name,
+    calories: cal,
+    protein: prot,
+    carbs: carbs,
+    fat: fat
+  });
+  saveAll();
+  renderTodayMeals();
+  updateTotals();
+}
+
+function renderTodayMeals() {
   const table = document.getElementById('foodLog');
-  const row = table.insertRow();
-  row.innerHTML = `<td>${name}</td><td>${cal}</td><td>${prot}</td><td><button onclick="this.parentElement.parentElement.remove();updateTotal()">×</button></td>`;
-  updateTotal();
+  table.innerHTML = `<tr style="background:#334155;"><th style="text-align:left">Meal</th><th>Cal</th><th>P</th><th>C</th><th>F</th><th></th></tr>`;
+  foodHistory.forEach((meal, i) => {
+    const row = table.insertRow();
+    row.innerHTML = `
+      <td style="text-align:left">${meal.name}</td>
+      <td>${meal.calories}</td>
+      <td>${meal.protein}</td>
+      <td>${meal.carbs}</td>
+      <td>${meal.fat}</td>
+      <td><button onclick="deleteMeal(${i})" class="danger">×</button></td>`;
+  });
 }
 
-function updateTotal() {
-  console.log("Total updated");
+function deleteMeal(i) {
+  if (confirm("Delete meal?")) {
+    foodHistory.splice(i, 1);
+    saveAll();
+    renderTodayMeals();
+    updateTotals();
+  }
 }
 
-// ====================== INIT ======================
+function updateTotals() {
+  let tCal = 0, tProt = 0;
+  foodHistory.forEach(m => { tCal += m.calories; tProt += m.protein; });
+  document.getElementById('totalCal').textContent = tCal;
+  document.getElementById('totalProt').textContent = tProt;
+}
+
+// History Charts & Calendar
+function logWeight() {
+  const w = parseFloat(document.getElementById('weightInput').value);
+  if (!w) return alert("Enter weight");
+  weightHistory.unshift({ date: new Date().toISOString().split('T')[0], weight: w });
+  saveAll();
+  renderWeightChart();
+}
+
+let weightChartInstance, calorieChartInstance;
+
+function renderWeightChart() {
+  const ctx = document.getElementById('weightChart');
+  if (weightChartInstance) weightChartInstance.destroy();
+  const recent = weightHistory.slice(0, 14).reverse();
+  weightChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: recent.map(d => d.date),
+      datasets: [{ label: 'Weight (kg)', data: recent.map(d => d.weight), borderColor: '#60a5fa', tension: 0.3 }]
+    },
+    options: { responsive: true }
+  });
+}
+
+function renderCalorieChart() {
+  const ctx = document.getElementById('calorieChart');
+  if (calorieChartInstance) calorieChartInstance.destroy();
+  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const data = [2450, 2180, 2650, 1980, 2320, 1890, 2550];
+  calorieChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Daily Calories', data, backgroundColor: '#3b82f6' }] },
+    options: { responsive: true }
+  });
+}
+
+function renderCalendar() {
+  const container = document.getElementById('calendar');
+  container.innerHTML = '';
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  days.forEach(d => {
+    const el = document.createElement('div');
+    el.style.fontWeight = 'bold';
+    el.textContent = d;
+    container.appendChild(el);
+  });
+  for (let i = 1; i <= 35; i++) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day';
+    dayEl.textContent = i;
+    // Mark some days as workout days for demo
+    if ([3,5,8,10,12,15,17,20,22,24,27].includes(i)) dayEl.classList.add('workout-day');
+    container.appendChild(dayEl);
+  }
+}
+
+// Tab Navigation
+function showTab(tabName) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+
+  if (tabName === 'track') renderWorkoutProgram();
+  if (tabName === 'calories') { renderTodayMeals(); updateTotals(); }
+  if (tabName === 'history') { 
+    renderWeightChart(); 
+    renderCalorieChart(); 
+    renderCalendar(); 
+  }
+}
+
+// Init
 window.onload = () => {
-  loadProgram();
+  loadData();
   renderWorkoutProgram();
   showTab('track');
 };
 </script>
-
 </body>
 </html>
