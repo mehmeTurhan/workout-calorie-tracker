@@ -5,21 +5,124 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grok's Hypertrophy Tracker</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #0f172a; color: #e2e8f0; }
-    h1, h2 { color: #60a5fa; text-align: center; margin: 15px 0; }
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      background: #0f172a; 
+      color: #e2e8f0; 
+    }
+    h1, h2 { 
+      color: #60a5fa; 
+      text-align: center; 
+      margin: 15px 0; 
+    }
     .tab { display: none; padding: 15px; }
     .tab.active { display: block; }
-    .nav { position: fixed; bottom: 0; width: 100%; background: #1e2937; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
-    .nav button { background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; }
+    .nav { 
+      position: fixed; 
+      bottom: 0; 
+      width: 100%; 
+      background: #1e2937; 
+      display: flex; 
+      justify-content: space-around; 
+      padding: 12px 0; 
+      border-top: 1px solid #334155; 
+    }
+    .nav button { 
+      background: none; 
+      border: none; 
+      color: #94a3b8; 
+      font-size: 13px; 
+      cursor: pointer; 
+    }
     .nav button.active { color: #60a5fa; font-weight: bold; }
-    .exercise-item { background: #1e2937; padding: 15px; margin: 10px 0; border-radius: 12px; cursor: pointer; }
+
+    .day-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 20px 0 10px;
+    }
+    .exercise-item { 
+      background: #1e2937; 
+      padding: 15px; 
+      margin: 10px 0; 
+      border-radius: 12px; 
+      cursor: pointer;
+      position: relative;
+    }
     .exercise-item:hover { background: #334155; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; }
-    .modal-content { background: #1e2937; margin: 40px auto; padding: 20px; width: 90%; max-width: 520px; border-radius: 12px; }
-    button { padding: 12px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 5px; }
+    .exercise-item .drag-handle {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: grab;
+      color: #64748b;
+      font-size: 20px;
+    }
+    .exercise-item .controls {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      display: flex;
+      gap: 5px;
+      opacity: 0.7;
+    }
+    .exercise-item:hover .controls { opacity: 1; }
+
+    .modal { 
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0,0,0,0.95); 
+      z-index: 1000; 
+      overflow-y: auto; 
+    }
+    .modal-content { 
+      background: #1e2937; 
+      margin: 40px auto; 
+      padding: 20px; 
+      width: 90%; 
+      max-width: 520px; 
+      border-radius: 12px; 
+    }
+    button { 
+      padding: 12px 20px; 
+      background: #3b82f6; 
+      color: white; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      margin: 5px; 
+    }
     button:hover { background: #60a5fa; }
-    input { background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 10px; border-radius: 6px; width: 100%; margin: 5px 0; }
-    .log-entry { background: #1e2937; padding: 12px; margin: 10px 0; border-radius: 10px; }
+    button.danger { background: #ef4444; }
+    button.success { background: #22c55e; }
+    input, select, textarea { 
+      background: #334155; 
+      color: #e2e8f0; 
+      border: 1px solid #475569; 
+      padding: 10px; 
+      border-radius: 6px; 
+      width: 100%; 
+      margin: 5px 0; 
+    }
+    .log-entry { 
+      background: #1e2937; 
+      padding: 12px; 
+      margin: 10px 0; 
+      border-radius: 10px; 
+    }
+    .edit-program-btn {
+      background: #64748b;
+      font-size: 0.9em;
+      padding: 6px 12px;
+    }
   </style>
 </head>
 <body>
@@ -35,38 +138,11 @@
 
 <!-- TRACK TAB -->
 <div id="track" class="tab active">
+  <div style="text-align:center; margin-bottom:15px;">
+    <button onclick="toggleProgramEdit()" class="edit-program-btn">✏️ Edit Program</button>
+  </div>
 
-  <h2>Pazartesi - Push</h2>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Bench Press</strong><br><small>4 sets × 6-10 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Incline Dumbbell Press</strong><br><small>4 sets × 6-10 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Overhead Press</strong><br><small>3 sets × 6-10 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Lateral Raises</strong><br><small>3 sets × 10-15 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Rear Delt Flyes</strong><br><small>3 sets × 10-15 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Tricep Pushdowns</strong><br><small>3 sets × 10-15 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Overhead Tricep Extension</strong><br><small>3 sets × 10-15 reps</small></div>
-
-  <h2>Salı - Pull</h2>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Lat Pulldown / Pull-Ups</strong><br><small>4 sets × 6-10 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Bent-Over Row</strong><br><small>4 sets × 6-10 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Single-Arm Dumbbell Row</strong><br><small>3 sets × 6-10 / side</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Face Pulls</strong><br><small>3 sets × 10-15 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Barbell Curls</strong><br><small>3 sets × 10-15 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Hammer Curls</strong><br><small>3 sets × 10-15 reps</small></div>
-
-  <h2>Çarşamba - Legs</h2>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Leg Press or Back Squat</strong><br><small>4 sets × 6-10 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Romanian Deadlift</strong><br><small>3 sets × 8-12 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Bulgarian Split Squats</strong><br><small>3 sets × 8-12 / leg</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Leg Curl</strong><br><small>3 sets × 10-15 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Calf Raises</strong><br><small>4 sets × 10-15 reps</small></div>
-
-  <h2>Cuma - Upper Mix + Light Legs</h2>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Bench Press (flat/close-grip)</strong><br><small>3 sets × 6-10 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Overhead Press</strong><br><small>3 sets × 6-10 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Cable Row</strong><br><small>3 sets × 8-12 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Lateral Raises</strong><br><small>3 sets × 10-15 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Rear Delt Flyes</strong><br><small>3 sets × 10-15 reps</small></div>
-  <div class="exercise-item" onclick="openLogModal(this)"><strong>Hip Thrusts</strong><br><small>2 sets × 8-12 reps</small></div>
+  <div id="workoutProgram"></div>
 </div>
 
 <!-- CALORIE TRACKER TAB -->
@@ -95,26 +171,271 @@
   <div class="modal-content">
     <h2 id="modalTitle"></h2>
     <div id="setsArea"></div>
-    <button onclick="addSetToCurrent()">+ Add Set</button><br>
-    <button onclick="saveCurrentLog()" style="background:#22c55e;">Save Exercise</button>
-    <button onclick="closeLogModal()" style="background:#ef4444;">Cancel</button>
+    <button onclick="addSetToCurrent()">+ Add Set</button><br><br>
+    <button onclick="saveCurrentLog()" class="success">Save Exercise</button>
+    <button onclick="closeLogModal()" class="danger">Cancel</button>
+  </div>
+</div>
+
+<!-- Edit Exercise Modal -->
+<div id="editExerciseModal" class="modal">
+  <div class="modal-content">
+    <h2>Edit Exercise</h2>
+    <input type="text" id="editName" placeholder="Exercise Name">
+    <div style="display:flex; gap:10px;">
+      <input type="number" id="editSets" placeholder="Sets" style="width:50%">
+      <input type="text" id="editReps" placeholder="Reps (e.g. 6-10)" style="width:50%">
+    </div>
+    <button onclick="saveEditedExercise()" class="success">Save Changes</button>
+    <button onclick="closeEditModal()" class="danger">Cancel</button>
+  </div>
+</div>
+
+<!-- Add New Exercise Modal -->
+<div id="addExerciseModal" class="modal">
+  <div class="modal-content">
+    <h2>Add New Exercise</h2>
+    <input type="text" id="newExerciseName" placeholder="Exercise Name">
+    <div style="display:flex; gap:10px;">
+      <input type="number" id="newSets" value="3" placeholder="Sets" style="width:50%">
+      <input type="text" id="newReps" value="8-12" placeholder="Reps (e.g. 6-10)" style="width:50%">
+    </div>
+    <button onclick="saveNewExercise()" class="success">Add Exercise</button>
+    <button onclick="closeAddModal()" class="danger">Cancel</button>
   </div>
 </div>
 
 <script>
-// Tab Navigation
-function showTab(tabName) {
-  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-  document.getElementById(tabName).classList.add('active');
+// ====================== DATA MODEL ======================
+let workoutProgram = [
+  {
+    id: "push",
+    day: "Pazartesi - Push",
+    exercises: [
+      { id: "bp1", name: "Bench Press", sets: 4, reps: "6-10" },
+      { id: "idp1", name: "Incline Dumbbell Press", sets: 4, reps: "6-10" },
+      { id: "ohp1", name: "Overhead Press", sets: 3, reps: "6-10" },
+      { id: "lr1", name: "Lateral Raises", sets: 3, reps: "10-15" },
+      { id: "rdf1", name: "Rear Delt Flyes", sets: 3, reps: "10-15" },
+      { id: "tp1", name: "Tricep Pushdowns", sets: 3, reps: "10-15" },
+      { id: "ote1", name: "Overhead Tricep Extension", sets: 3, reps: "10-15" }
+    ]
+  },
+  {
+    id: "pull",
+    day: "Salı - Pull",
+    exercises: [
+      { id: "lp1", name: "Lat Pulldown / Pull-Ups", sets: 4, reps: "6-10" },
+      { id: "bor1", name: "Bent-Over Row", sets: 4, reps: "6-10" },
+      { id: "sadr1", name: "Single-Arm Dumbbell Row", sets: 3, reps: "6-10 / side" },
+      { id: "fp1", name: "Face Pulls", sets: 3, reps: "10-15" },
+      { id: "bc1", name: "Barbell Curls", sets: 3, reps: "10-15" },
+      { id: "hc1", name: "Hammer Curls", sets: 3, reps: "10-15" }
+    ]
+  },
+  {
+    id: "legs",
+    day: "Çarşamba - Legs",
+    exercises: [
+      { id: "lp2", name: "Leg Press or Back Squat", sets: 4, reps: "6-10" },
+      { id: "rdl1", name: "Romanian Deadlift", sets: 3, reps: "8-12" },
+      { id: "bss1", name: "Bulgarian Split Squats", sets: 3, reps: "8-12 / leg" },
+      { id: "lc1", name: "Leg Curl", sets: 3, reps: "10-15" },
+      { id: "cr1", name: "Calf Raises", sets: 4, reps: "10-15" }
+    ]
+  },
+  {
+    id: "upper",
+    day: "Cuma - Upper Mix + Light Legs",
+    exercises: [
+      { id: "bp2", name: "Bench Press (flat/close-grip)", sets: 3, reps: "6-10" },
+      { id: "ohp2", name: "Overhead Press", sets: 3, reps: "6-10" },
+      { id: "cr2", name: "Cable Row", sets: 3, reps: "8-12" },
+      { id: "lr2", name: "Lateral Raises", sets: 3, reps: "10-15" },
+      { id: "rdf2", name: "Rear Delt Flyes", sets: 3, reps: "10-15" },
+      { id: "ht1", name: "Hip Thrusts", sets: 2, reps: "8-12" }
+    ]
+  }
+];
+
+let isEditingProgram = false;
+let currentDayIndex = null;
+let currentExerciseIndex = null;
+let currentLog = { exercise: "", dayId: "", exerciseId: "", sets: [] };
+
+// Load from localStorage
+function loadProgram() {
+  const saved = localStorage.getItem('hypertrophyProgram');
+  if (saved) workoutProgram = JSON.parse(saved);
 }
 
-// Exercise Logging
-let currentLog = {exercise: "", sets: []};
+// Save to localStorage
+function saveProgram() {
+  localStorage.setItem('hypertrophyProgram', JSON.stringify(workoutProgram));
+}
 
-function openLogModal(el) {
-  currentLog.exercise = el.querySelector('strong').textContent;
-  currentLog.sets = [];
-  document.getElementById('modalTitle').textContent = currentLog.exercise;
+// Render the entire program
+function renderWorkoutProgram() {
+  const container = document.getElementById('workoutProgram');
+  container.innerHTML = '';
+
+  workoutProgram.forEach((day, dayIndex) => {
+    const dayHTML = `
+      <div class="day-header">
+        <h2>${day.day}</h2>
+        ${isEditingProgram ? `
+          <div>
+            <button onclick="addExerciseToDay(${dayIndex})" style="font-size:0.9em;">+ Add</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+    container.innerHTML += dayHTML;
+
+    const dayContainer = document.createElement('div');
+    dayContainer.id = `day-${day.id}`;
+
+    day.exercises.forEach((ex, exIndex) => {
+      const exHTML = `
+        <div class="exercise-item" draggable="${isEditingProgram}" 
+             ondragstart="dragStart(event, ${dayIndex}, ${exIndex})"
+             ondragover="dragOver(event)"
+             ondrop="drop(event, ${dayIndex}, ${exIndex})"
+             onclick="${isEditingProgram ? '' : `openLogModal(${dayIndex}, ${exIndex})`}">
+          
+          ${isEditingProgram ? `<span class="drag-handle">☰</span>` : ''}
+          
+          <strong>${ex.name}</strong><br>
+          <small>${ex.sets} sets × ${ex.reps} reps</small>
+          
+          ${isEditingProgram ? `
+            <div class="controls">
+              <button onclick="editExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();" style="padding:4px 8px; font-size:0.8em;">✏️</button>
+              <button onclick="deleteExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();" class="danger" style="padding:4px 8px; font-size:0.8em;">🗑</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      dayContainer.innerHTML += exHTML;
+    });
+
+    container.appendChild(dayContainer);
+  });
+}
+
+// Drag and Drop
+let draggedDayIndex = null;
+let draggedExIndex = null;
+
+function dragStart(e, dayIndex, exIndex) {
+  draggedDayIndex = dayIndex;
+  draggedExIndex = exIndex;
+  e.dataTransfer.effectAllowed = "move";
+}
+
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+}
+
+function drop(e, targetDayIndex, targetExIndex) {
+  e.preventDefault();
+  if (draggedDayIndex === null || draggedExIndex === null) return;
+  
+  const day = workoutProgram[targetDayIndex];
+  const [movedExercise] = day.exercises.splice(draggedExIndex, 1);
+  day.exercises.splice(targetExIndex, 0, movedExercise);
+  
+  saveProgram();
+  renderWorkoutProgram();
+}
+
+// ====================== PROGRAM EDITING ======================
+function toggleProgramEdit() {
+  isEditingProgram = !isEditingProgram;
+  renderWorkoutProgram();
+}
+
+function editExercise(dayIndex, exIndex) {
+  currentDayIndex = dayIndex;
+  currentExerciseIndex = exIndex;
+  const ex = workoutProgram[dayIndex].exercises[exIndex];
+  
+  document.getElementById('editName').value = ex.name;
+  document.getElementById('editSets').value = ex.sets;
+  document.getElementById('editReps').value = ex.reps;
+  
+  document.getElementById('editExerciseModal').style.display = 'block';
+}
+
+function saveEditedExercise() {
+  if (currentDayIndex === null || currentExerciseIndex === null) return;
+  
+  const ex = workoutProgram[currentDayIndex].exercises[currentExerciseIndex];
+  ex.name = document.getElementById('editName').value.trim() || ex.name;
+  ex.sets = parseInt(document.getElementById('editSets').value) || ex.sets;
+  ex.reps = document.getElementById('editReps').value.trim() || ex.reps;
+  
+  saveProgram();
+  closeEditModal();
+  renderWorkoutProgram();
+}
+
+function closeEditModal() {
+  document.getElementById('editExerciseModal').style.display = 'none';
+}
+
+function deleteExercise(dayIndex, exIndex) {
+  if (!confirm("Delete this exercise?")) return;
+  workoutProgram[dayIndex].exercises.splice(exIndex, 1);
+  saveProgram();
+  renderWorkoutProgram();
+}
+
+function addExerciseToDay(dayIndex) {
+  currentDayIndex = dayIndex;
+  document.getElementById('newExerciseName').value = '';
+  document.getElementById('newSets').value = '3';
+  document.getElementById('newReps').value = '8-12';
+  document.getElementById('addExerciseModal').style.display = 'block';
+}
+
+function saveNewExercise() {
+  if (currentDayIndex === null) return;
+  
+  const name = document.getElementById('newExerciseName').value.trim();
+  if (!name) return alert("Exercise name is required");
+  
+  const newEx = {
+    id: 'ex_' + Date.now(),
+    name: name,
+    sets: parseInt(document.getElementById('newSets').value) || 3,
+    reps: document.getElementById('newReps').value.trim() || '8-12'
+  };
+  
+  workoutProgram[currentDayIndex].exercises.push(newEx);
+  saveProgram();
+  closeAddModal();
+  renderWorkoutProgram();
+}
+
+function closeAddModal() {
+  document.getElementById('addExerciseModal').style.display = 'none';
+}
+
+// ====================== LOGGING ======================
+function openLogModal(dayIndex, exIndex) {
+  const day = workoutProgram[dayIndex];
+  const ex = day.exercises[exIndex];
+  
+  currentLog = { 
+    exercise: ex.name, 
+    dayId: day.id, 
+    exerciseId: ex.id, 
+    sets: [] 
+  };
+  
+  document.getElementById('modalTitle').textContent = ex.name;
   document.getElementById('setsArea').innerHTML = '';
   document.getElementById('logModal').style.display = 'block';
   addSetToCurrent();
@@ -126,7 +447,7 @@ function addSetToCurrent() {
   area.innerHTML += `
     <div style="background:#334155; padding:12px; margin:8px 0; border-radius:8px;">
       <strong>Set ${num}</strong><br>
-      <input type="number" placeholder="Weight (lbs/kg)" id="w${num}" style="width:48%">
+      <input type="number" placeholder="Weight (kg)" id="w${num}" style="width:48%">
       <input type="number" placeholder="Reps" id="r${num}" style="width:48%">
     </div>`;
 }
@@ -134,6 +455,7 @@ function addSetToCurrent() {
 function saveCurrentLog() {
   let logText = `<strong>${currentLog.exercise}</strong><br>`;
   const sets = document.querySelectorAll('#setsArea > div');
+  
   sets.forEach((set, i) => {
     const weight = document.getElementById(`w${i+1}`).value || '-';
     const reps = document.getElementById(`r${i+1}`).value || '-';
@@ -143,7 +465,7 @@ function saveCurrentLog() {
   const entry = `<div class="log-entry">${logText}<small>${new Date().toLocaleString()}</small></div>`;
   document.getElementById('historyLogs').innerHTML += entry;
   
-  alert(`${currentLog.exercise} saved successfully!`);
+  alert(`${currentLog.exercise} logged successfully!`);
   closeLogModal();
 }
 
@@ -151,12 +473,21 @@ function closeLogModal() {
   document.getElementById('logModal').style.display = 'none';
 }
 
-// Calorie Tracker
-function previewImage(e) { /* ... */ }
+// ====================== TAB NAVIGATION ======================
+function showTab(tabName) {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  
+  // Re-render when switching back to track in case edits happened
+  if (tabName === 'track') renderWorkoutProgram();
+}
+
+// ====================== CALORIE TRACKER (unchanged) ======================
+function previewImage(e) { /* placeholder */ }
 function analyzeMeal() {
   const desc = document.getElementById('mealDesc').value.trim();
   if (!desc) return alert("Please describe your meal");
-  // Simple AI simulation
+  
   let cal = 480, prot = 32;
   const lower = desc.toLowerCase();
   if (lower.includes("chicken") || lower.includes("beef")) { cal += 200; prot += 30; }
@@ -182,12 +513,15 @@ function addToFoodLog(name, cal, prot) {
 }
 
 function updateTotal() {
-  // Simple total calculation
   console.log("Total updated");
 }
 
-// Initialize
-window.onload = () => showTab('track');
+// ====================== INIT ======================
+window.onload = () => {
+  loadProgram();
+  renderWorkoutProgram();
+  showTab('track');
+};
 </script>
 
 </body>
