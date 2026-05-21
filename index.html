@@ -46,7 +46,7 @@
 
 <h1>Hypertrophy Tracker</h1>
 
-<!-- Global Settings Bar -->
+<!-- Global Settings -->
 <div class="settings-bar">
   <label>Unit: </label>
   <select id="globalUnit" onchange="changeUnit(this.value)">
@@ -56,9 +56,17 @@
   <span style="margin-left:20px;">Timezone: </span>
   <select id="globalTimezone" onchange="saveTimezone()">
     <option value="UTC">UTC</option>
-    <option value="America/New_York">Eastern Time</option>
+    <option value="Europe/Istanbul">Istanbul (Turkey)</option>
+    <option value="Europe/London">London (GMT)</option>
+    <option value="Europe/Paris">Paris (CET)</option>
+    <option value="America/New_York">Eastern Time (NY)</option>
     <option value="America/Chicago">Central Time</option>
+    <option value="America/Denver">Mountain Time</option>
     <option value="America/Los_Angeles">Pacific Time</option>
+    <option value="Asia/Dubai">Dubai</option>
+    <option value="Asia/Kolkata">India</option>
+    <option value="Asia/Tokyo">Tokyo</option>
+    <option value="Australia/Sydney">Sydney</option>
   </select>
 </div>
 
@@ -118,7 +126,7 @@
   <canvas id="progressChart" height="200"></canvas>
 
   <h3>Daily Nutrition</h3>
-  <canvas id="nutritionChart" height="200"></canvas>
+  <canvas id="nutritionChart" height="220"></canvas>
 
   <h3>Workout Calendar</h3>
   <div id="calendar"></div>
@@ -251,7 +259,7 @@ function changeUnit(newUnit) {
   });
 
   saveAll();
-  alert(`Units changed to ${newUnit}. All historical data updated.`);
+  alert(`Units changed to ${newUnit}. Historical data updated.`);
   renderWeightChart();
   renderProgressChart();
 }
@@ -366,7 +374,7 @@ function saveCurrentLog() {
 
 function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
 
-// Calorie functions (simplified)
+// Calorie functions
 function analyzeMeal() {
   const desc = document.getElementById('mealDesc').value.trim();
   if (!desc) return alert("Describe your meal");
@@ -416,7 +424,7 @@ function updateTotals() {
   document.getElementById('totalProt').textContent = p;
 }
 
-// Progressive Overload & Charts
+// Charts
 function populateExerciseSelect() {
   const select = document.getElementById('exerciseSelect');
   select.innerHTML = '<option value="">Select Exercise</option>';
@@ -469,10 +477,13 @@ function logWeight() {
 function renderWeightChart() {
   const ctx = document.getElementById('weightChart');
   if (window.wChart) window.wChart.destroy();
-  const recent = weightHistory.slice(0, 30).reverse();
+  const sorted = [...weightHistory].sort((a,b) => new Date(a.date) - new Date(b.date));
   window.wChart = new Chart(ctx, {
     type: 'line',
-    data: { labels: recent.map(d=>d.date), datasets: [{ label: `Weight (${settings.weightUnit})`, data: recent.map(d=>d.weight), borderColor: '#60a5fa' }] },
+    data: {
+      labels: sorted.map(d => d.date),
+      datasets: [{ label: `Weight (${settings.weightUnit})`, data: sorted.map(d => d.weight), borderColor: '#60a5fa', tension: 0.3 }]
+    },
     options: { responsive: true }
   });
 }
@@ -496,11 +507,19 @@ function renderNutritionChart() {
     data: {
       labels: dates,
       datasets: [
-        { label: 'Calories', data: dates.map(d=>daily[d].cal), backgroundColor: '#3b82f6' },
-        { label: 'Protein', data: dates.map(d=>daily[d].prot), backgroundColor: '#22c55e' }
+        { label: 'Calories', data: dates.map(d => daily[d].cal), backgroundColor: '#3b82f6', yAxisID: 'y' },
+        { label: 'Protein', data: dates.map(d => daily[d].prot), backgroundColor: '#22c55e', yAxisID: 'y1' },
+        { label: 'Carbs', data: dates.map(d => daily[d].carbs), backgroundColor: '#eab308', yAxisID: 'y1' },
+        { label: 'Fat', data: dates.map(d => daily[d].fat), backgroundColor: '#ef4444', yAxisID: 'y1' }
       ]
     },
-    options: { responsive: true }
+    options: {
+      responsive: true,
+      scales: {
+        y: { type: 'linear', position: 'left', title: { display: true, text: 'Calories' } },
+        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Macros (g)' } }
+      }
+    }
   });
 }
 
@@ -537,7 +556,7 @@ function showDayDetail(dateStr) {
 
   const workouts = workoutLogs[dateStr] || [];
   if (workouts.length > 0) {
-    container.innerHTML += `<h4>Workout</h4>`;
+    container.innerHTML += `<h4>💪 Workout</h4>`;
     workouts.forEach(log => {
       let html = `<div class="history-entry"><strong>${log.exercise}</strong><br>`;
       log.sets.forEach(s => html += `Set ${s.set}: ${s.weight} ${settings.weightUnit} × ${s.reps}<br>`);
@@ -548,7 +567,7 @@ function showDayDetail(dateStr) {
 
   const meals = foodHistory.filter(m => m.date === dateStr);
   if (meals.length > 0) {
-    container.innerHTML += `<h4>Meals</h4>`;
+    container.innerHTML += `<h4>🍽️ Meals</h4>`;
     meals.forEach(m => {
       container.innerHTML += `<div class="history-entry">${m.name} — ${m.calories} kcal | ${m.protein}g P | ${m.carbs}g C | ${m.fat}g F</div>`;
     });
