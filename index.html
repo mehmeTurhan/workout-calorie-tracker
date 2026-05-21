@@ -6,154 +6,45 @@
   <title>Hypertrophy Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      margin: 0; 
-      padding: 0; 
-      background: #0f172a; 
-      color: #e2e8f0; 
-    }
-    h1, h2 { 
-      color: #60a5fa; 
-      text-align: center; 
-      margin: 15px 0; 
-    }
-    .tab { 
-      display: none; 
-      padding: 15px 15px 100px; 
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #0f172a; color: #e2e8f0; }
+    h1, h2 { color: #60a5fa; text-align: center; margin: 15px 0; }
+    .tab { display: none; padding: 15px 15px 100px; }
     .tab.active { display: block; }
     
-    .nav { 
-      position: fixed; 
-      bottom: 0; 
-      width: 100%; 
-      background: #1e2937; 
-      display: flex; 
-      justify-content: space-around; 
-      padding: 12px 0; 
-      border-top: 1px solid #334155; 
-      z-index: 100;
-    }
-    .nav button { 
-      background: none; 
-      border: none; 
-      color: #94a3b8; 
-      font-size: 13px; 
-      cursor: pointer; 
-    }
+    .nav { position: fixed; bottom: 0; width: 100%; background: #1e2937; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 100; }
+    .nav button { background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; }
     .nav button.active { color: #60a5fa; font-weight: bold; }
 
-    .day-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 20px 0 10px;
-    }
-    .exercise-item { 
-      background: #1e2937; 
-      padding: 15px; 
-      margin: 10px 0; 
-      border-radius: 12px; 
-      cursor: pointer;
-      position: relative;
-    }
+    .day-header { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; }
+    .exercise-item { background: #1e2937; padding: 15px; margin: 10px 0; border-radius: 12px; cursor: pointer; position: relative; }
     .exercise-item:hover { background: #334155; }
-    .exercise-item .drag-handle {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: grab;
-      color: #64748b;
-      font-size: 22px;
-    }
-    .exercise-item .controls {
-      position: absolute;
-      right: 12px;
-      top: 12px;
-      display: flex;
-      gap: 6px;
-      opacity: 0.8;
-    }
+    .exercise-item .drag-handle { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); cursor: grab; color: #64748b; font-size: 22px; }
+    .exercise-item .controls { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; opacity: 0.8; }
     .exercise-item:hover .controls { opacity: 1; }
 
-    .modal { 
-      display: none; 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%; 
-      background: rgba(0,0,0,0.95); 
-      z-index: 1000; 
-      overflow-y: auto; 
-    }
-    .modal-content { 
-      background: #1e2937; 
-      margin: 40px auto; 
-      padding: 20px; 
-      width: 90%; 
-      max-width: 520px; 
-      border-radius: 12px; 
-    }
-    button { 
-      padding: 12px 20px; 
-      background: #3b82f6; 
-      color: white; 
-      border: none; 
-      border-radius: 8px; 
-      cursor: pointer; 
-      margin: 5px; 
-    }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; }
+    .modal-content { background: #1e2937; margin: 40px auto; padding: 20px; width: 90%; max-width: 520px; border-radius: 12px; }
+
+    button { padding: 12px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; margin: 5px; }
     button:hover { background: #60a5fa; }
     button.danger { background: #ef4444; }
     button.success { background: #22c55e; }
 
-    input, textarea { 
-      background: #334155; 
-      color: #e2e8f0; 
-      border: 1px solid #475569; 
-      padding: 10px; 
-      border-radius: 6px; 
-      width: 100%; 
-      margin: 5px 0; 
-      box-sizing: border-box;
-    }
-    .log-entry { 
-      background: #1e2937; 
-      padding: 12px; 
-      margin: 10px 0; 
-      border-radius: 10px; 
-    }
+    input, textarea { background: #334155; color: #e2e8f0; border: 1px solid #475569; padding: 10px; border-radius: 6px; width: 100%; margin: 5px 0; box-sizing: border-box; }
 
-    canvas {
-      margin: 15px 0;
-      background: #1e2937;
-      border-radius: 12px;
-      padding: 10px;
-    }
-
-    #calendar {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      text-align: center;
-      font-size: 0.85em;
-    }
-    .calendar-day {
-      padding: 8px 4px;
-      border-radius: 6px;
-      background: #1e2937;
-    }
+    canvas { margin: 15px 0; background: #1e2937; border-radius: 12px; padding: 10px; }
+    #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.9em; }
+    .calendar-day { padding: 10px 4px; border-radius: 6px; background: #1e2937; cursor: pointer; }
+    .calendar-day:hover { background: #334155; }
     .workout-day { background: #22c55e; color: black; font-weight: bold; }
+
+    .history-entry { background: #1e2937; padding: 12px; margin: 8px 0; border-radius: 10px; }
   </style>
 </head>
 <body>
 
 <h1>Hypertrophy Tracker</h1>
 
-<!-- Navigation -->
 <div class="nav">
   <button onclick="showTab('track')" class="active">Track</button>
   <button onclick="showTab('calories')">Calories</button>
@@ -168,11 +59,9 @@
   <div id="workoutProgram"></div>
 </div>
 
-<!-- CALORIE TRACKER TAB -->
+<!-- CALORIES TAB -->
 <div id="calories" class="tab">
   <h2>Calorie Tracker</h2>
-  
-  <input type="file" id="mealPhoto" accept="image/*" onchange="previewImage(event)" style="margin-bottom:10px;">
   <textarea id="mealDesc" rows="3" placeholder="Describe your meal for AI analysis..."></textarea>
   <button onclick="analyzeMeal()">🔍 Analyze with AI</button>
 
@@ -200,7 +89,7 @@
   <h2>History & Progress</h2>
   
   <h3>Weight Tracking</h3>
-  <input type="number" id="weightInput" placeholder="Body weight (kg)" style="width:65%; display:inline-block;">
+  <input type="number" id="weightInput" placeholder="Body weight (kg)" style="width:65%;">
   <button onclick="logWeight()">Log Weight</button>
   <canvas id="weightChart" height="160"></canvas>
 
@@ -209,9 +98,14 @@
 
   <h3>Workout Calendar</h3>
   <div id="calendar"></div>
+
+  <div id="dayDetail" style="margin-top:20px; display:none;">
+    <h3 id="selectedDate"></h3>
+    <div id="dayLogs"></div>
+  </div>
 </div>
 
-<!-- Workout Logging Modal -->
+<!-- LOGGING MODAL -->
 <div id="logModal" class="modal">
   <div class="modal-content">
     <h2 id="modalTitle"></h2>
@@ -222,7 +116,7 @@
   </div>
 </div>
 
-<!-- Edit Exercise Modal -->
+<!-- EDIT EXERCISE MODAL -->
 <div id="editExerciseModal" class="modal">
   <div class="modal-content">
     <h2>Edit Exercise</h2>
@@ -236,14 +130,14 @@
   </div>
 </div>
 
-<!-- Add New Exercise Modal -->
+<!-- ADD EXERCISE MODAL -->
 <div id="addExerciseModal" class="modal">
   <div class="modal-content">
     <h2>Add New Exercise</h2>
     <input type="text" id="newExerciseName" placeholder="Exercise Name">
     <div style="display:flex; gap:10px;">
-      <input type="number" id="newSets" value="3" placeholder="Sets" style="width:50%">
-      <input type="text" id="newReps" value="8-12" placeholder="Reps (e.g. 6-10)" style="width:50%">
+      <input type="number" id="newSets" value="3" style="width:50%">
+      <input type="text" id="newReps" value="8-12" style="width:50%">
     </div>
     <button onclick="saveNewExercise()" class="success">Add Exercise</button>
     <button onclick="closeAddModal()" class="danger">Cancel</button>
@@ -289,47 +183,35 @@ let workoutProgram = [
 
 let foodHistory = [];
 let weightHistory = [];
-let workoutHistory = []; // {date: "2025-05-20", dayType: "Monday - Push"}
+let workoutLogs = {}; // date -> array of logs
 
 let isEditingProgram = false;
 let currentDayIndex = null;
 let currentExerciseIndex = null;
-let currentLog = { exercise: "", sets: [] };
+let currentLog = null;
 
-// Load data
+// Load from localStorage
 function loadData() {
-  const savedProgram = localStorage.getItem('hypertrophyProgram');
-  if (savedProgram) workoutProgram = JSON.parse(savedProgram);
-
-  const savedFood = localStorage.getItem('foodHistory');
-  if (savedFood) foodHistory = JSON.parse(savedFood);
-
-  const savedWeight = localStorage.getItem('weightHistory');
-  if (savedWeight) weightHistory = JSON.parse(savedWeight);
-
-  const savedWorkouts = localStorage.getItem('workoutHistory');
-  if (savedWorkouts) workoutHistory = JSON.parse(savedWorkouts);
+  if (localStorage.getItem('workoutProgram')) workoutProgram = JSON.parse(localStorage.getItem('workoutProgram'));
+  if (localStorage.getItem('foodHistory')) foodHistory = JSON.parse(localStorage.getItem('foodHistory'));
+  if (localStorage.getItem('weightHistory')) weightHistory = JSON.parse(localStorage.getItem('weightHistory'));
+  if (localStorage.getItem('workoutLogs')) workoutLogs = JSON.parse(localStorage.getItem('workoutLogs'));
 }
 
 function saveAll() {
-  localStorage.setItem('hypertrophyProgram', JSON.stringify(workoutProgram));
+  localStorage.setItem('workoutProgram', JSON.stringify(workoutProgram));
   localStorage.setItem('foodHistory', JSON.stringify(foodHistory));
   localStorage.setItem('weightHistory', JSON.stringify(weightHistory));
-  localStorage.setItem('workoutHistory', JSON.stringify(workoutHistory));
+  localStorage.setItem('workoutLogs', JSON.stringify(workoutLogs));
 }
 
-// Render Workout Program
+// Render Program
 function renderWorkoutProgram() {
   const container = document.getElementById('workoutProgram');
   container.innerHTML = '';
 
   workoutProgram.forEach((day, dayIndex) => {
-    let html = `
-      <div class="day-header">
-        <h2>${day.day}</h2>
-        ${isEditingProgram ? `<button onclick="addExerciseToDay(${dayIndex})">+ Add Exercise</button>` : ''}
-      </div>`;
-
+    let html = `<div class="day-header"><h2>${day.day}</h2>${isEditingProgram ? `<button onclick="addExerciseToDay(${dayIndex})">+ Add</button>` : ''}</div>`;
     day.exercises.forEach((ex, exIndex) => {
       html += `
         <div class="exercise-item" draggable="${isEditingProgram}" 
@@ -352,164 +234,114 @@ function renderWorkoutProgram() {
 }
 
 // Drag & Drop
-function dragStart(e, dayIndex, exIndex) {
-  e.dataTransfer.setData("text/plain", JSON.stringify({dayIndex, exIndex}));
-}
+function dragStart(e, dayIndex, exIndex) { e.dataTransfer.setData("text", JSON.stringify({dayIndex, exIndex})); }
 function dragOver(e) { e.preventDefault(); }
 function drop(e, targetDayIndex, targetExIndex) {
   e.preventDefault();
-  const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-  const {dayIndex: sourceDay, exIndex: sourceEx} = data;
-
-  if (sourceDay === targetDayIndex) {
-    const day = workoutProgram[targetDayIndex];
-    const [moved] = day.exercises.splice(sourceEx, 1);
-    day.exercises.splice(targetExIndex, 0, moved);
-    saveAll();
-    renderWorkoutProgram();
-  }
-}
-
-// Program Editing
-function toggleProgramEdit() {
-  isEditingProgram = !isEditingProgram;
+  const data = JSON.parse(e.dataTransfer.getData("text"));
+  if (data.dayIndex !== targetDayIndex) return;
+  const day = workoutProgram[targetDayIndex];
+  const [moved] = day.exercises.splice(data.exIndex, 1);
+  day.exercises.splice(targetExIndex, 0, moved);
+  saveAll();
   renderWorkoutProgram();
 }
 
-function editExercise(dayIndex, exIndex) {
-  currentDayIndex = dayIndex;
-  currentExerciseIndex = exIndex;
-  const ex = workoutProgram[dayIndex].exercises[exIndex];
-  document.getElementById('editName').value = ex.name;
-  document.getElementById('editSets').value = ex.sets;
-  document.getElementById('editReps').value = ex.reps;
-  document.getElementById('editExerciseModal').style.display = 'block';
-}
-
+// Program Edit Functions
+function toggleProgramEdit() { isEditingProgram = !isEditingProgram; renderWorkoutProgram(); }
+function editExercise(d, e) { currentDayIndex = d; currentExerciseIndex = e; const ex = workoutProgram[d].exercises[e]; document.getElementById('editName').value = ex.name; document.getElementById('editSets').value = ex.sets; document.getElementById('editReps').value = ex.reps; document.getElementById('editExerciseModal').style.display = 'block'; }
 function saveEditedExercise() {
   const ex = workoutProgram[currentDayIndex].exercises[currentExerciseIndex];
-  ex.name = document.getElementById('editName').value.trim() || ex.name;
+  ex.name = document.getElementById('editName').value || ex.name;
   ex.sets = parseInt(document.getElementById('editSets').value) || ex.sets;
-  ex.reps = document.getElementById('editReps').value.trim() || ex.reps;
-  saveAll();
-  closeEditModal();
-  renderWorkoutProgram();
+  ex.reps = document.getElementById('editReps').value || ex.reps;
+  saveAll(); closeEditModal(); renderWorkoutProgram();
 }
-
-function closeEditModal() {
-  document.getElementById('editExerciseModal').style.display = 'none';
-}
-
-function deleteExercise(dayIndex, exIndex) {
-  if (confirm("Delete this exercise?")) {
-    workoutProgram[dayIndex].exercises.splice(exIndex, 1);
-    saveAll();
-    renderWorkoutProgram();
-  }
-}
-
-function addExerciseToDay(dayIndex) {
-  currentDayIndex = dayIndex;
-  document.getElementById('newExerciseName').value = '';
-  document.getElementById('newSets').value = '3';
-  document.getElementById('newReps').value = '8-12';
-  document.getElementById('addExerciseModal').style.display = 'block';
-}
-
+function closeEditModal() { document.getElementById('editExerciseModal').style.display = 'none'; }
+function deleteExercise(d, e) { if(confirm("Delete?")) { workoutProgram[d].exercises.splice(e,1); saveAll(); renderWorkoutProgram(); } }
+function addExerciseToDay(d) { currentDayIndex = d; document.getElementById('addExerciseModal').style.display = 'block'; }
 function saveNewExercise() {
   const name = document.getElementById('newExerciseName').value.trim();
-  if (!name) return alert("Exercise name is required");
-  const newEx = {
-    id: 'ex_' + Date.now(),
-    name: name,
-    sets: parseInt(document.getElementById('newSets').value) || 3,
-    reps: document.getElementById('newReps').value.trim() || '8-12'
-  };
-  workoutProgram[currentDayIndex].exercises.push(newEx);
-  saveAll();
-  closeAddModal();
-  renderWorkoutProgram();
+  if(!name) return alert("Name required");
+  workoutProgram[currentDayIndex].exercises.push({
+    id: 'ex'+Date.now(), name, sets: parseInt(document.getElementById('newSets').value)||3, reps: document.getElementById('newReps').value||'8-12'
+  });
+  saveAll(); closeAddModal(); renderWorkoutProgram();
 }
+function closeAddModal() { document.getElementById('addExerciseModal').style.display = 'none'; }
 
-function closeAddModal() {
-  document.getElementById('addExerciseModal').style.display = 'none';
-}
-
-// Workout Logging
+// Logging
 function openLogModal(dayIndex, exIndex) {
   const ex = workoutProgram[dayIndex].exercises[exIndex];
-  currentLog = { exercise: ex.name, sets: [] };
-  
-  // Record workout day
-  const today = new Date().toISOString().split('T')[0];
-  if (!workoutHistory.some(w => w.date === today)) {
-    workoutHistory.unshift({ date: today, dayType: workoutProgram[dayIndex].day });
-  }
+  currentLog = { exercise: ex.name, dayType: workoutProgram[dayIndex].day, sets: [] };
 
   document.getElementById('modalTitle').textContent = ex.name;
-  document.getElementById('setsArea').innerHTML = '';
+  const area = document.getElementById('setsArea');
+  area.innerHTML = '';
+
+  for (let i = 1; i <= ex.sets; i++) {
+    area.innerHTML += `
+      <div style="background:#334155; padding:12px; margin:8px 0; border-radius:8px;">
+        <strong>Set ${i}</strong><br>
+        <input type="number" placeholder="Weight (kg)" id="w${i}" style="width:48%">
+        <input type="number" placeholder="Reps" id="r${i}" style="width:48%">
+      </div>`;
+  }
   document.getElementById('logModal').style.display = 'block';
-  addSetToCurrent();
 }
 
 function addSetToCurrent() {
   const area = document.getElementById('setsArea');
   const num = area.children.length + 1;
-  area.innerHTML += `
-    <div style="background:#334155; padding:12px; margin:8px 0; border-radius:8px;">
-      <strong>Set ${num}</strong><br>
-      <input type="number" placeholder="Weight (kg)" id="w${num}" style="width:48%">
-      <input type="number" placeholder="Reps" id="r${num}" style="width:48%">
-    </div>`;
+  area.innerHTML += `<div style="background:#334155; padding:12px; margin:8px 0; border-radius:8px;"><strong>Set ${num}</strong><br><input type="number" placeholder="Weight (kg)" id="w${num}" style="width:48%"><input type="number" placeholder="Reps" id="r${num}" style="width:48%"></div>`;
 }
 
 function saveCurrentLog() {
-  let logText = `<strong>${currentLog.exercise}</strong><br>`;
-  const setsDivs = document.querySelectorAll('#setsArea > div');
-  setsDivs.forEach((set, i) => {
-    const weight = document.getElementById(`w${i+1}`).value || '-';
-    const reps = document.getElementById(`r${i+1}`).value || '-';
-    logText += `Set ${i+1}: ${weight} kg × ${reps} reps<br>`;
+  const sets = [];
+  const divs = document.querySelectorAll('#setsArea > div');
+  divs.forEach((_, i) => {
+    const w = document.getElementById(`w${i+1}`).value || '-';
+    const r = document.getElementById(`r${i+1}`).value || '-';
+    sets.push({set: i+1, weight: w, reps: r});
   });
 
-  const entry = `<div class="log-entry">${logText}<small>${new Date().toLocaleString()}</small></div>`;
-  document.getElementById('historyLogs').innerHTML = entry + document.getElementById('historyLogs').innerHTML;
-  
-  alert(`${currentLog.exercise} logged successfully!`);
+  const today = new Date().toISOString().split('T')[0];
+  if (!workoutLogs[today]) workoutLogs[today] = [];
+  workoutLogs[today].push({
+    exercise: currentLog.exercise,
+    dayType: currentLog.dayType,
+    sets: sets,
+    timestamp: new Date().toLocaleString()
+  });
+
+  saveAll();
+  alert("Exercise logged successfully!");
   closeLogModal();
 }
 
-function closeLogModal() {
-  document.getElementById('logModal').style.display = 'none';
-}
+function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
 
-// Calorie Functions
-function previewImage() {}
-
+// Calorie Tracker
 function analyzeMeal() {
   const desc = document.getElementById('mealDesc').value.trim();
-  if (!desc) return alert("Please describe your meal");
-  
-  let cal = 520, prot = 32, carbs = 48, fat = 16;
-  const lower = desc.toLowerCase();
-  if (lower.includes("chicken") || lower.includes("beef")) { cal += 230; prot += 35; }
-  if (lower.includes("rice")) { cal += 190; carbs += 42; }
-
-  document.getElementById('analysisResult').style.display = 'block';
+  if (!desc) return alert("Describe your meal");
+  let cal = 500, prot = 30, carbs = 50, fat = 15;
+  const l = desc.toLowerCase();
+  if (l.includes("chicken")||l.includes("beef")) { cal += 200; prot += 30; }
+  if (l.includes("rice")) carbs += 40;
   document.getElementById('analysisResult').innerHTML = `<strong>Estimated:</strong><br>${cal} kcal | ${prot}g P | ${carbs}g C | ${fat}g F`;
+  document.getElementById('analysisResult').style.display = 'block';
   addFoodEntry(desc, cal, prot, carbs, fat);
 }
 
 function addManualMeal() {
   const name = document.getElementById('manualName').value.trim();
-  const cal = parseInt(document.getElementById('manualCal').value) || 0;
-  const prot = parseInt(document.getElementById('manualProt').value) || 0;
-  const carbs = parseInt(document.getElementById('manualCarbs').value) || 0;
-  const fat = parseInt(document.getElementById('manualFat').value) || 0;
-
-  if (!name || cal <= 0) return alert("Meal name and calories are required");
-  addFoodEntry(name, cal, prot, carbs, fat);
-
+  const cal = parseInt(document.getElementById('manualCal').value)||0;
+  if (!name || cal <= 0) return alert("Name and calories required");
+  addFoodEntry(name, cal,
+    parseInt(document.getElementById('manualProt').value)||0,
+    parseInt(document.getElementById('manualCarbs').value)||0,
+    parseInt(document.getElementById('manualFat').value)||0);
   document.getElementById('manualName').value = '';
   document.getElementById('manualCal').value = '';
   document.getElementById('manualProt').value = '';
@@ -518,122 +350,106 @@ function addManualMeal() {
 }
 
 function addFoodEntry(name, cal, prot, carbs, fat) {
-  foodHistory.unshift({
-    date: new Date().toISOString().split('T')[0],
-    name: name,
-    calories: cal,
-    protein: prot,
-    carbs: carbs,
-    fat: fat
-  });
+  foodHistory.unshift({date: new Date().toISOString().split('T')[0], name, calories:cal, protein:prot, carbs, fat});
   saveAll();
   renderTodayMeals();
   updateTotals();
 }
 
 function renderTodayMeals() {
-  const table = document.getElementById('foodLog');
-  table.innerHTML = `<tr style="background:#334155;"><th style="text-align:left">Meal</th><th>Cal</th><th>P</th><th>C</th><th>F</th><th></th></tr>`;
-  foodHistory.forEach((meal, i) => {
-    const row = table.insertRow();
-    row.innerHTML = `
-      <td style="text-align:left">${meal.name}</td>
-      <td>${meal.calories}</td>
-      <td>${meal.protein}</td>
-      <td>${meal.carbs}</td>
-      <td>${meal.fat}</td>
-      <td><button onclick="deleteMeal(${i})" class="danger">×</button></td>`;
+  const t = document.getElementById('foodLog');
+  t.innerHTML = `<tr style="background:#334155"><th style="text-align:left">Meal</th><th>Cal</th><th>P</th><th>C</th><th>F</th><th></th></tr>`;
+  foodHistory.forEach((m,i) => {
+    const r = t.insertRow();
+    r.innerHTML = `<td style="text-align:left">${m.name}</td><td>${m.calories}</td><td>${m.protein}</td><td>${m.carbs}</td><td>${m.fat}</td><td><button onclick="deleteMeal(${i})" class="danger">×</button></td>`;
   });
 }
 
 function deleteMeal(i) {
-  if (confirm("Delete meal?")) {
-    foodHistory.splice(i, 1);
-    saveAll();
-    renderTodayMeals();
-    updateTotals();
-  }
+  if(confirm("Delete meal?")) { foodHistory.splice(i,1); saveAll(); renderTodayMeals(); updateTotals(); }
 }
 
 function updateTotals() {
-  let tCal = 0, tProt = 0;
-  foodHistory.forEach(m => { tCal += m.calories; tProt += m.protein; });
-  document.getElementById('totalCal').textContent = tCal;
-  document.getElementById('totalProt').textContent = tProt;
+  let c=0, p=0;
+  foodHistory.forEach(m=>{c+=m.calories||0; p+=m.protein||0;});
+  document.getElementById('totalCal').textContent = c;
+  document.getElementById('totalProt').textContent = p;
 }
 
-// History Charts & Calendar
+// History
 function logWeight() {
   const w = parseFloat(document.getElementById('weightInput').value);
-  if (!w) return alert("Enter weight");
-  weightHistory.unshift({ date: new Date().toISOString().split('T')[0], weight: w });
+  if(!w) return alert("Enter weight");
+  weightHistory.unshift({date: new Date().toISOString().split('T')[0], weight: w});
   saveAll();
   renderWeightChart();
 }
 
-let weightChartInstance, calorieChartInstance;
+let weightChartInst, calorieChartInst;
 
 function renderWeightChart() {
   const ctx = document.getElementById('weightChart');
-  if (weightChartInstance) weightChartInstance.destroy();
-  const recent = weightHistory.slice(0, 14).reverse();
-  weightChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: recent.map(d => d.date),
-      datasets: [{ label: 'Weight (kg)', data: recent.map(d => d.weight), borderColor: '#60a5fa', tension: 0.3 }]
-    },
-    options: { responsive: true }
-  });
+  if(weightChartInst) weightChartInst.destroy();
+  const data = weightHistory.slice(0,14).reverse();
+  weightChartInst = new Chart(ctx, {type:'line', data:{labels: data.map(d=>d.date), datasets:[{label:'Weight (kg)', data: data.map(d=>d.weight), borderColor:'#60a5fa'}]}, options:{responsive:true}});
 }
 
 function renderCalorieChart() {
   const ctx = document.getElementById('calorieChart');
-  if (calorieChartInstance) calorieChartInstance.destroy();
-  const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const data = [2450, 2180, 2650, 1980, 2320, 1890, 2550];
-  calorieChartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ label: 'Daily Calories', data, backgroundColor: '#3b82f6' }] },
-    options: { responsive: true }
-  });
+  if(calorieChartInst) calorieChartInst.destroy();
+  calorieChartInst = new Chart(ctx, {type:'bar', data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{label:'Calories', data:[2300,2100,2600,1950,2400,1850,2550], backgroundColor:'#3b82f6'}]}, options:{responsive:true}});
 }
 
 function renderCalendar() {
-  const container = document.getElementById('calendar');
-  container.innerHTML = '';
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  days.forEach(d => {
-    const el = document.createElement('div');
-    el.style.fontWeight = 'bold';
-    el.textContent = d;
-    container.appendChild(el);
+  const cont = document.getElementById('calendar');
+  cont.innerHTML = '';
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
+    const el = document.createElement('div'); el.style.fontWeight='bold'; el.textContent=d; cont.appendChild(el);
   });
-  for (let i = 1; i <= 35; i++) {
-    const dayEl = document.createElement('div');
-    dayEl.className = 'calendar-day';
-    dayEl.textContent = i;
-    // Mark some days as workout days for demo
-    if ([3,5,8,10,12,15,17,20,22,24,27].includes(i)) dayEl.classList.add('workout-day');
-    container.appendChild(dayEl);
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+  for(let i=0; i<firstDay; i++) cont.appendChild(document.createElement('div'));
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  for(let d=1; d<=daysInMonth; d++) {
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const el = document.createElement('div');
+    el.className = 'calendar-day';
+    el.textContent = d;
+    if(workoutLogs[dateStr]) el.classList.add('workout-day');
+    el.onclick = () => showDayDetail(dateStr);
+    cont.appendChild(el);
   }
 }
 
-// Tab Navigation
-function showTab(tabName) {
+function showDayDetail(dateStr) {
+  document.getElementById('selectedDate').textContent = `Workout - ${dateStr}`;
+  const cont = document.getElementById('dayLogs');
+  cont.innerHTML = '';
+  const logs = workoutLogs[dateStr] || [];
+  if(logs.length === 0) cont.innerHTML = '<p>No logs for this day.</p>';
+  else {
+    logs.forEach(log => {
+      let html = `<div class="history-entry"><strong>${log.exercise}</strong> (${log.dayType})<br>`;
+      log.sets.forEach(s => html += `Set ${s.set}: ${s.weight}kg × ${s.reps}<br>`);
+      html += `<small>${log.timestamp}</small></div>`;
+      cont.innerHTML += html;
+    });
+  }
+  document.getElementById('dayDetail').style.display = 'block';
+}
+
+function showTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(tabName).classList.add('active');
-
-  if (tabName === 'track') renderWorkoutProgram();
-  if (tabName === 'calories') { renderTodayMeals(); updateTotals(); }
-  if (tabName === 'history') { 
-    renderWeightChart(); 
-    renderCalorieChart(); 
-    renderCalendar(); 
+  document.getElementById(tab).classList.add('active');
+  if(tab === 'history') {
+    renderCalendar();
+    renderWeightChart();
+    renderCalorieChart();
   }
+  if(tab === 'calories') { renderTodayMeals(); updateTotals(); }
+  if(tab === 'track') renderWorkoutProgram();
 }
 
-// Init
 window.onload = () => {
   loadData();
   renderWorkoutProgram();
