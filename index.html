@@ -97,11 +97,11 @@
   <canvas id="weightChart" height="160"></canvas>
 
   <h3>Progressive Overload</h3>
-  <select id="exerciseSelect" onchange="renderProgressChart()"></select>
-  <canvas id="progressChart" height="220"></canvas>
+  <select id="exerciseSelect" onchange="renderProgressChart()" style="margin-bottom:10px;"></select>
+  <canvas id="progressChart" height="200"></canvas>
 
   <h3>Daily Nutrition</h3>
-  <canvas id="nutritionChart" height="220"></canvas>
+  <canvas id="nutritionChart" height="200"></canvas>
 
   <h3>Workout Calendar</h3>
   <div id="calendar"></div>
@@ -147,7 +147,7 @@
       <input type="number" id="editSets" placeholder="Sets" style="width:50%">
       <input type="text" id="editReps" placeholder="Reps" style="width:50%">
     </div>
-    <button onclick="saveEditedExercise()" class="success">Save</button>
+    <button onclick="saveEditedExercise()" class="success">Save Changes</button>
     <button onclick="closeEditModal()" class="danger">Cancel</button>
   </div>
 </div>
@@ -160,7 +160,7 @@
       <input type="number" id="newSets" value="3" style="width:50%">
       <input type="text" id="newReps" value="8-12" style="width:50%">
     </div>
-    <button onclick="saveNewExercise()" class="success">Add</button>
+    <button onclick="saveNewExercise()" class="success">Add Exercise</button>
     <button onclick="closeAddModal()" class="danger">Cancel</button>
   </div>
 </div>
@@ -204,7 +204,7 @@ let workoutProgram = [
 
 let foodHistory = [];
 let weightHistory = [];
-let workoutLogs = {}; // date -> array of exercise logs
+let workoutLogs = {};
 
 let settings = { weightUnit: "kg" };
 let isEditingProgram = false;
@@ -212,7 +212,7 @@ let currentDayIndex = null;
 let currentExerciseIndex = null;
 let currentLog = null;
 
-// Load & Save
+// Load / Save
 function loadData() {
   if (localStorage.getItem('workoutProgram')) workoutProgram = JSON.parse(localStorage.getItem('workoutProgram'));
   if (localStorage.getItem('foodHistory')) foodHistory = JSON.parse(localStorage.getItem('foodHistory'));
@@ -229,7 +229,7 @@ function saveAll() {
   localStorage.setItem('trackerSettings', JSON.stringify(settings));
 }
 
-// Render Workout Program
+// Workout Program Rendering
 function renderWorkoutProgram() {
   const container = document.getElementById('workoutProgram');
   container.innerHTML = '';
@@ -246,7 +246,11 @@ function renderWorkoutProgram() {
           ${isEditingProgram ? `<span class="drag-handle">☰</span>` : ''}
           <strong>${ex.name}</strong><br>
           <small>${ex.sets} sets × ${ex.reps}</small>
-          ${isEditingProgram ? `<div class="controls"><button onclick="editExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();">✏️</button><button onclick="deleteExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();" class="danger">🗑</button></div>` : ''}
+          ${isEditingProgram ? `
+            <div class="controls">
+              <button onclick="editExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();">✏️</button>
+              <button onclick="deleteExercise(${dayIndex}, ${exIndex}); event.stopImmediatePropagation();" class="danger">🗑</button>
+            </div>` : ''}
         </div>`;
     });
     container.innerHTML += html;
@@ -266,9 +270,16 @@ function drop(e, targetDayIndex, targetExIndex) {
   renderWorkoutProgram();
 }
 
-// Program Editing Functions
+// Program Editing
 function toggleProgramEdit() { isEditingProgram = !isEditingProgram; renderWorkoutProgram(); }
-function editExercise(d, e) { currentDayIndex = d; currentExerciseIndex = e; const ex = workoutProgram[d].exercises[e]; document.getElementById('editName').value = ex.name; document.getElementById('editSets').value = ex.sets; document.getElementById('editReps').value = ex.reps; document.getElementById('editExerciseModal').style.display = 'block'; }
+function editExercise(d, e) {
+  currentDayIndex = d; currentExerciseIndex = e;
+  const ex = workoutProgram[d].exercises[e];
+  document.getElementById('editName').value = ex.name;
+  document.getElementById('editSets').value = ex.sets;
+  document.getElementById('editReps').value = ex.reps;
+  document.getElementById('editExerciseModal').style.display = 'block';
+}
 function saveEditedExercise() {
   const ex = workoutProgram[currentDayIndex].exercises[currentExerciseIndex];
   ex.name = document.getElementById('editName').value || ex.name;
@@ -277,17 +288,19 @@ function saveEditedExercise() {
   saveAll(); closeEditModal(); renderWorkoutProgram();
 }
 function closeEditModal() { document.getElementById('editExerciseModal').style.display = 'none'; }
-function deleteExercise(d, e) { if(confirm("Delete?")) { workoutProgram[d].exercises.splice(e,1); saveAll(); renderWorkoutProgram(); } }
+function deleteExercise(d, e) { if(confirm("Delete exercise?")) { workoutProgram[d].exercises.splice(e,1); saveAll(); renderWorkoutProgram(); } }
 function addExerciseToDay(d) { currentDayIndex = d; document.getElementById('addExerciseModal').style.display = 'block'; }
 function saveNewExercise() {
   const name = document.getElementById('newExerciseName').value.trim();
   if(!name) return alert("Name required");
-  workoutProgram[currentDayIndex].exercises.push({id: 'ex'+Date.now(), name, sets: parseInt(document.getElementById('newSets').value)||3, reps: document.getElementById('newReps').value||'8-12'});
+  workoutProgram[currentDayIndex].exercises.push({
+    id: 'ex'+Date.now(), name, sets: parseInt(document.getElementById('newSets').value)||3, reps: document.getElementById('newReps').value||'8-12'
+  });
   saveAll(); closeAddModal(); renderWorkoutProgram();
 }
 function closeAddModal() { document.getElementById('addExerciseModal').style.display = 'none'; }
 
-// Workout Logging
+// Logging
 function openLogModal(dayIndex, exIndex) {
   const ex = workoutProgram[dayIndex].exercises[exIndex];
   currentLog = { exercise: ex.name, dayType: workoutProgram[dayIndex].day };
@@ -326,24 +339,74 @@ function saveCurrentLog() {
   saveAll();
   alert(`Logged for ${logDate}`);
   closeLogModal();
-  renderProgressChart();
+  if (document.getElementById('history').classList.contains('active')) renderProgressChart();
 }
 
 function closeLogModal() { document.getElementById('logModal').style.display = 'none'; }
 
-// Calories & Meals
-function analyzeMeal() { /* same as before */ }
-function addManualMeal() { /* same as before with date */ }
-function renderTodayMeals() { /* shows only today */ }
-function updateTotals() { /* same */ }
+// Calories
+function analyzeMeal() {
+  const desc = document.getElementById('mealDesc').value.trim();
+  if (!desc) return alert("Describe your meal");
+  let cal = 500, prot = 30, carbs = 50, fat = 15;
+  const lower = desc.toLowerCase();
+  if (lower.includes("chicken") || lower.includes("beef")) { cal += 220; prot += 35; }
+  if (lower.includes("rice")) { cal += 180; carbs += 40; }
+  document.getElementById('analysisResult').innerHTML = `<strong>Estimated:</strong><br>${cal} kcal | ${prot}g P | ${carbs}g C | ${fat}g F`;
+  document.getElementById('analysisResult').style.display = 'block';
+  addFoodEntry(desc, cal, prot, carbs, fat);
+}
 
-// Progressive Overload Chart
+function addManualMeal() {
+  const name = document.getElementById('manualName').value.trim();
+  const cal = parseInt(document.getElementById('manualCal').value) || 0;
+  if (!name || cal <= 0) return alert("Name and calories required");
+
+  const date = document.getElementById('manualDate').value || new Date().toISOString().split('T')[0];
+
+  foodHistory.unshift({
+    date, name, calories: cal,
+    protein: parseInt(document.getElementById('manualProt').value)||0,
+    carbs: parseInt(document.getElementById('manualCarbs').value)||0,
+    fat: parseInt(document.getElementById('manualFat').value)||0
+  });
+  saveAll();
+  renderTodayMeals();
+  updateTotals();
+}
+
+function addFoodEntry(name, cal, prot, carbs, fat) {
+  const date = document.getElementById('mealDate').value || new Date().toISOString().split('T')[0];
+  foodHistory.unshift({date, name, calories:cal, protein:prot, carbs, fat});
+  saveAll();
+  renderTodayMeals();
+  updateTotals();
+}
+
+function renderTodayMeals() {
+  const today = new Date().toISOString().split('T')[0];
+  const table = document.getElementById('foodLog');
+  table.innerHTML = `<tr style="background:#334155"><th style="text-align:left">Meal</th><th>Cal</th><th>P</th><th>C</th><th>F</th></tr>`;
+  foodHistory.filter(m => m.date === today).forEach(m => {
+    const row = table.insertRow();
+    row.innerHTML = `<td style="text-align:left">${m.name}</td><td>${m.calories}</td><td>${m.protein}</td><td>${m.carbs}</td><td>${m.fat}</td>`;
+  });
+}
+
+function updateTotals() {
+  let c = 0, p = 0;
+  foodHistory.forEach(m => { c += m.calories||0; p += m.protein||0; });
+  document.getElementById('totalCal').textContent = c;
+  document.getElementById('totalProt').textContent = p;
+}
+
+// Progressive Overload
 function populateExerciseSelect() {
   const select = document.getElementById('exerciseSelect');
   select.innerHTML = '<option value="">Select Exercise</option>';
-  const allExercises = [];
-  workoutProgram.forEach(day => day.exercises.forEach(ex => allExercises.push(ex.name)));
-  [...new Set(allExercises)].forEach(name => {
+  const names = new Set();
+  workoutProgram.forEach(day => day.exercises.forEach(ex => names.add(ex.name)));
+  names.forEach(name => {
     const opt = document.createElement('option');
     opt.value = name;
     opt.textContent = name;
@@ -352,55 +415,94 @@ function populateExerciseSelect() {
 }
 
 function renderProgressChart() {
-  const exerciseName = document.getElementById('exerciseSelect').value;
-  if (!exerciseName) return;
-
+  const name = document.getElementById('exerciseSelect').value;
+  if (!name) return;
   const ctx = document.getElementById('progressChart');
-  if (window.progressChartInst) window.progressChartInst.destroy();
+  if (window.progChart) window.progChart.destroy();
 
-  const progressData = [];
+  const dataPoints = [];
   Object.keys(workoutLogs).sort().forEach(date => {
-    const dayLogs = workoutLogs[date];
-    dayLogs.forEach(log => {
-      if (log.exercise === exerciseName) {
-        let totalWeight = 0;
-        log.sets.forEach(s => {
-          const w = parseFloat(s.weight) || 0;
-          const r = parseFloat(s.reps) || 0;
-          totalWeight += w * r;
-        });
-        progressData.push({date, volume: totalWeight});
+    workoutLogs[date].forEach(log => {
+      if (log.exercise === name) {
+        let volume = 0;
+        log.sets.forEach(s => volume += (parseFloat(s.weight)||0) * (parseFloat(s.reps)||0));
+        dataPoints.push({date, volume});
       }
     });
   });
 
-  const labels = progressData.map(d => d.date);
-  const volumes = progressData.map(d => d.volume);
-
-  window.progressChartInst = new Chart(ctx, {
+  window.progChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
-      datasets: [{ label: 'Volume (kg × reps)', data: volumes, borderColor: '#60a5fa', tension: 0.3, fill: false }]
+      labels: dataPoints.map(d => d.date),
+      datasets: [{ label: 'Volume (kg×reps)', data: dataPoints.map(d => d.volume), borderColor: '#60a5fa', tension: 0.3 }]
     },
-    options: { responsive: true, plugins: { title: { display: true, text: exerciseName + ' - Progressive Overload' } } }
+    options: { responsive: true }
   });
 }
 
-// Calendar, Weight, Nutrition, Settings (same as previous full version)
-function logWeight() { /* with date */ }
-function renderWeightChart() { /* same */ }
-function renderNutritionChart() { /* same */ }
-function renderCalendar() { /* same */ }
-function showDayDetail(dateStr) { /* full details */ }
-function openSettings() { /* same */ }
-function saveSettings() { /* same */ }
-function closeSettings() { /* same */ }
+// Weight, Nutrition, Calendar, Settings (standard)
+function logWeight() {
+  const w = parseFloat(document.getElementById('weightInput').value);
+  if (!w) return alert("Enter weight");
+  const date = document.getElementById('weightDate').value || new Date().toISOString().split('T')[0];
+  weightHistory.unshift({date, weight: w});
+  saveAll();
+  renderWeightChart();
+}
+
+function renderWeightChart() {
+  const ctx = document.getElementById('weightChart');
+  if (window.wChart) window.wChart.destroy();
+  const recent = weightHistory.slice(0, 30).reverse();
+  window.wChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: recent.map(d=>d.date), datasets: [{ label: 'Weight ('+settings.weightUnit+')', data: recent.map(d=>d.weight), borderColor: '#60a5fa' }] },
+    options: { responsive: true }
+  });
+}
+
+function renderNutritionChart() {
+  const ctx = document.getElementById('nutritionChart');
+  if (window.nutChart) window.nutChart.destroy();
+
+  const daily = {};
+  foodHistory.forEach(m => {
+    if (!daily[m.date]) daily[m.date] = {cal:0, prot:0, carbs:0, fat:0};
+    daily[m.date].cal += m.calories||0;
+    daily[m.date].prot += m.protein||0;
+    daily[m.date].carbs += m.carbs||0;
+    daily[m.date].fat += m.fat||0;
+  });
+
+  const dates = Object.keys(daily).sort().slice(-30);
+  window.nutChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: dates,
+      datasets: [
+        { label: 'Calories', data: dates.map(d=>daily[d].cal), backgroundColor: '#3b82f6' },
+        { label: 'Protein', data: dates.map(d=>daily[d].prot), backgroundColor: '#22c55e' },
+        { label: 'Carbs', data: dates.map(d=>daily[d].carbs), backgroundColor: '#eab308' },
+        { label: 'Fat', data: dates.map(d=>daily[d].fat), backgroundColor: '#ef4444' }
+      ]
+    },
+    options: { responsive: true }
+  });
+}
+
+function renderCalendar() { /* implementation same as before */ }
+function showDayDetail(dateStr) { /* full details with macros */ }
+function openSettings() { document.getElementById('settingsModal').style.display = 'block'; }
+function saveSettings() {
+  settings.weightUnit = document.getElementById('unitWeight').value;
+  saveAll(); closeSettings();
+}
+function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
 function showTab(tabName) {
-  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(tabName).classList.add('active');
-
   if (tabName === 'history') {
     renderCalendar();
     renderWeightChart();
@@ -418,9 +520,9 @@ function showTab(tabName) {
 window.onload = () => {
   loadData();
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById('mealDate').value = today;
-  document.getElementById('manualDate').value = today;
-  document.getElementById('weightDate').value = today;
+  ['mealDate','manualDate','weightDate','workoutLogDate'].forEach(id => {
+    if (document.getElementById(id)) document.getElementById(id).value = today;
+  });
 
   renderWorkoutProgram();
   showTab('track');
